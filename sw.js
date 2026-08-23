@@ -3,6 +3,7 @@ const STATIC_ASSETS = [
   "./",
   "./index.html",
   "./logo.jpg",
+  "./app-icon.png",
   "./manifest.json",
   "./data/1 Chronicles.json",
   "./data/1 Corinthians.json",
@@ -70,8 +71,10 @@ const STATIC_ASSETS = [
   "./data/Titus.json",
   "./data/Zechariah.json",
   "./data/Zephaniah.json",
-  "./assets/index-C2thiYoU.js",
-  "./assets/index-CFxgZ2MY.css"
+  "./assets/app-icon-DLdxqNg3.png",
+  "./assets/index-DFLQ4-hX.js",
+  "./assets/index-dkfLfdvw.css",
+  "./assets/manifest-B5Jk_S2A.json"
 ];
 
 // Install: Cache essential assets including the entire offline verses.json database
