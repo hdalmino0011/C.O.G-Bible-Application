@@ -19,6 +19,7 @@ function generateOfflineServiceWorker() {
         './',
         './index.html',
         './logo.jpg',
+        './app-icon.png',
         './manifest.json',
         ...bibleData,
         ...builtAssets,
