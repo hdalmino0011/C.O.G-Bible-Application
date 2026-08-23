@@ -191,7 +191,7 @@ export const QUIZ_QUESTIONS: QuizQuestion[] = [
     category: 'all',
     categoryLabel: 'All Books',
     q: 'What is the last book in the Holy Bible?',
-    options: ['Revelation (Pinadayag)', 'Jude', 'Malachi', 'Hebrews'],
+    options: ['Revelation (Bugna)', 'Jude', 'Malachi', 'Hebrews'],
     answer: 0,
     explanation: 'The Revelation of Jesus Christ written by the Apostle John is the final prophetic book of the New Testament.',
     reference: 'Revelation 1:1, Revelation 22:20-21'
