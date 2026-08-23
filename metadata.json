@@ -1,0 +1,8 @@
+{
+  "name": "COG (T.J.R) Bible",
+  "description": "The Church of God (Truth, Justice, and Righteousness) Bible App featuring Cebuano (Bugna) & English (KJV) parallel text, Bible Quiz, Dictionary, and customizable reading settings.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
