@@ -137,16 +137,13 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
             <span className="text-gray-500 dark:text-gray-400">Version:</span>
             <span className="font-semibold text-gray-800 dark:text-gray-100">1.2.0 (Enhanced Edition)</span>
           </div>
-          <div className="flex justify-between py-1 border-b border-gray-100 dark:border-slate-800">
+          <div className="flex justify-between py-1">
             <span className="text-gray-500 dark:text-gray-400">Bible Versions:</span>
             <span className="font-semibold text-gray-800 dark:text-gray-100 text-right">
               Cebuano (Bugna) &amp; English (KJV)
             </span>
           </div>
-          <div className="flex justify-between py-1">
-            <span className="text-gray-500 dark:text-gray-400">Developer / Author:</span>
-            <span className="font-semibold text-gray-800 dark:text-gray-100">Hanz Dalmino</span>
-          </div>
+          {/* Developer / Author line has been removed */}
         </div>
       </div>
     </div>
