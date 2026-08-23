@@ -41,7 +41,7 @@ export const Splash: React.FC<SplashProps> = ({ onComplete }) => {
               {/* Logo container with border */}
               <div className="relative w-full h-full flex items-center justify-center rounded-full border-4 border-[#E4C765]/50 shadow-2xl bg-gradient-to-br from-[#1B3A6B] to-[#0E2143] p-1">
                 <img
-                  src="./logo.jpg"
+                  src="./app-icon.png"
                   alt="COG (T.J.R) Bible Seal"
                   className="w-full h-full object-contain rounded-full"
                   referrerPolicy="no-referrer"
