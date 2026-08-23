@@ -143,7 +143,6 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
               Cebuano (Bugna) &amp; English (KJV)
             </span>
           </div>
-          {/* Developer / Author line has been removed */}
         </div>
       </div>
     </div>
