@@ -31,17 +31,22 @@ export const Splash: React.FC<SplashProps> = ({ onComplete }) => {
             initial={{ scale: 0.8, opacity: 0, y: 20 }}
             animate={{ scale: 1, opacity: 1, y: 0 }}
             transition={{ duration: 0.6, ease: 'easeOut' }}
-            className="flex flex-col items-center max-w-sm"
+            className="flex flex-col items-center justify-center max-w-sm flex-1"
           >
-            {/* Emblem logo with golden halo */}
-            <div className="relative w-44 h-44 sm:w-52 sm:h-52 mb-6 flex items-center justify-center">
-              <div className="absolute inset-0 rounded-full bg-[#C9A227]/20 blur-xl animate-pulse" />
-              <img
-                src="./logo.jpg"
-                alt="COG (T.J.R) Bible Seal"
-                className="relative w-full h-full object-contain rounded-full border-2 border-[#E4C765] shadow-2xl p-2 bg-[#142748]/80"
-                referrerPolicy="no-referrer"
-              />
+            {/* Emblem logo with golden halo - Perfectly centered */}
+            <div className="relative w-40 h-40 sm:w-48 sm:h-48 mb-8 flex items-center justify-center flex-shrink-0">
+              {/* Glow effect */}
+              <div className="absolute inset-0 rounded-full bg-[#C9A227]/30 blur-2xl animate-pulse" />
+              
+              {/* Logo container with border */}
+              <div className="relative w-full h-full flex items-center justify-center rounded-full border-4 border-[#E4C765]/50 shadow-2xl bg-gradient-to-br from-[#1B3A6B] to-[#0E2143] p-1">
+                <img
+                  src="./logo.jpg"
+                  alt="COG (T.J.R) Bible Seal"
+                  className="w-full h-full object-contain rounded-full"
+                  referrerPolicy="no-referrer"
+                />
+              </div>
             </div>
 
             <motion.h1
@@ -76,7 +81,7 @@ export const Splash: React.FC<SplashProps> = ({ onComplete }) => {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.7 }}
-              className="flex items-center gap-2 mt-8"
+              className="flex items-center gap-2 mt-10"
             >
               <span className="w-2.5 h-2.5 rounded-full bg-[#E4C765] animate-bounce [animation-delay:-0.3s]" />
               <span className="w-2.5 h-2.5 rounded-full bg-[#E4C765] animate-bounce [animation-delay:-0.15s]" />
