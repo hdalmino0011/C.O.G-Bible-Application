@@ -89,7 +89,7 @@ export const BIBLE_BOOKS: BibleBookInfo[] = [
   { name: "Jude", cebName: "Judas", testament: "New", chapters: 1, category: "General Epistles" },
 
   // Prophecy
-  { name: "Revelation", cebName: "Pinadayag", testament: "New", chapters: 22, category: "Prophecy" }
+  { name: "Revelation", cebName: "Bugna", testament: "New", chapters: 22, category: "Prophecy" }
 ];
 
 export const OLD_TESTAMENT_BOOKS = BIBLE_BOOKS.filter(b => b.testament === 'Old').map(b => b.name);
@@ -106,10 +106,9 @@ export function getBookInfo(bookName: string): BibleBookInfo | undefined {
 
 // Comprehensive aliases mapping for Cebuano and English search inputs
 const BOOK_ALIASES: Record<string, string> = {
-  // Revelation / Bugna / Pinadayag
+  // Revelation / Bugna
   'bugna': 'Revelation',
   'ang bugna': 'Revelation',
-  'pinadayag': 'Revelation',
   'revelation': 'Revelation',
   'revelations': 'Revelation',
   'rev': 'Revelation',
