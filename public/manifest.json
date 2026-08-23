@@ -14,45 +14,45 @@
   "dir": "ltr",
   "icons": [
     {
-      "src": "./logo.jpg",
+      "src": "./app-icon.png",
       "sizes": "512x512",
-      "type": "image/jpeg",
+      "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "./logo.jpg",
+      "src": "./app-icon.png",
       "sizes": "192x192",
-      "type": "image/jpeg",
+      "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "./logo.jpg",
+      "src": "./app-icon.png",
       "sizes": "180x180",
-      "type": "image/jpeg",
+      "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "./logo.jpg",
+      "src": "./app-icon.png",
       "sizes": "152x152",
-      "type": "image/jpeg",
+      "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "./logo.jpg",
+      "src": "./app-icon.png",
       "sizes": "144x144",
-      "type": "image/jpeg",
+      "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "./logo.jpg",
+      "src": "./app-icon.png",
       "sizes": "128x128",
-      "type": "image/jpeg",
+      "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "./logo.jpg",
+      "src": "./app-icon.png",
       "sizes": "96x96",
-      "type": "image/jpeg",
+      "type": "image/png",
       "purpose": "any"
     }
   ],
@@ -63,9 +63,9 @@
       "url": "./#bible",
       "icons": [
         {
-          "src": "./logo.jpg",
+          "src": "./app-icon.png",
           "sizes": "96x96",
-          "type": "image/jpeg"
+          "type": "image/png"
         }
       ]
     },
@@ -75,9 +75,9 @@
       "url": "./#quiz",
       "icons": [
         {
-          "src": "./logo.jpg",
+          "src": "./app-icon.png",
           "sizes": "96x96",
-          "type": "image/jpeg"
+          "type": "image/png"
         }
       ]
     },
@@ -87,18 +87,18 @@
       "url": "./#dictionary",
       "icons": [
         {
-          "src": "./logo.jpg",
+          "src": "./app-icon.png",
           "sizes": "96x96",
-          "type": "image/jpeg"
+          "type": "image/png"
         }
       ]
     }
   ],
   "screenshots": [
     {
-      "src": "./logo.jpg",
+      "src": "./app-icon.png",
       "sizes": "540x720",
-      "type": "image/jpeg",
+      "type": "image/png",
       "form_factor": "narrow"
     }
   ],
