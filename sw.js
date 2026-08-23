@@ -1,4 +1,4 @@
-const CACHE_NAME = 'cog-bible-v1.3.1';
+const CACHE_NAME = 'cog-bible-v1.3.2';
 const STATIC_ASSETS = [
   "./",
   "./index.html",
