@@ -24,6 +24,8 @@
     background-color: var(--ivory);
     color: var(--slate);
     -webkit-tap-highlight-color: transparent;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
   }
 }
 
@@ -70,6 +72,43 @@ body.theme-blue {
   --ink: #0D2137;
   background-color: #E8F0FE;
   color: #1A365D;
+}
+
+/* Keep utility-class text readable when dark mode is selected. */
+body.theme-dark [class~="text-[#10203D]"],
+body.theme-dark [class~="text-[#1B3A6B]"],
+body.theme-dark [class~="text-[#33415C]"],
+body.theme-dark [class~="text-gray-500"],
+body.theme-dark [class~="text-gray-600"],
+body.theme-dark [class~="text-gray-700"],
+body.theme-dark [class~="text-gray-800"] {
+  color: var(--slate) !important;
+}
+
+body.theme-dark [class~="text-gray-400"] {
+  color: var(--slate-soft) !important;
+}
+
+body.theme-dark [class~="bg-white"] {
+  background-color: var(--paper) !important;
+}
+
+body.theme-dark [class~="border-gray-100"],
+body.theme-dark [class~="border-gray-200"] {
+  border-color: var(--line) !important;
+}
+
+/* Avoid tiny, low-contrast labels across all themes and font choices. */
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+button,
+label {
+  line-height: 1.35;
 }
 
 /* Font family variations */
