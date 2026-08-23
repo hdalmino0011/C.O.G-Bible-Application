@@ -14,15 +14,15 @@
   "dir": "ltr",
   "icons": [
     {
-      "src": "./logo.png",
+      "src": "./logo.jpg",
       "sizes": "512x512",
-      "type": "image/png",
+      "type": "image/jpeg",
       "purpose": "any maskable"
     },
     {
-      "src": "./logo.png",
+      "src": "./logo.jpg",
       "sizes": "192x192",
-      "type": "image/png",
+      "type": "image/jpeg",
       "purpose": "any maskable"
     }
   ],
@@ -31,19 +31,19 @@
       "name": "Open Bible",
       "short_name": "Bible",
       "url": "./#bible",
-      "icons": [{ "src": "./logo.png", "sizes": "96x96", "type": "image/png" }]
+      "icons": [{ "src": "./logo.jpg", "sizes": "96x96", "type": "image/jpeg" }]
     },
     {
       "name": "Open Quiz",
       "short_name": "Quiz",
       "url": "./#quiz",
-      "icons": [{ "src": "./logo.png", "sizes": "96x96", "type": "image/png" }]
+      "icons": [{ "src": "./logo.jpg", "sizes": "96x96", "type": "image/jpeg" }]
     },
     {
       "name": "Open Dictionary",
       "short_name": "Dictionary",
       "url": "./#dictionary",
-      "icons": [{ "src": "./logo.png", "sizes": "96x96", "type": "image/png" }]
+      "icons": [{ "src": "./logo.jpg", "sizes": "96x96", "type": "image/jpeg" }]
     }
   ],
   "prefer_related_applications": false
