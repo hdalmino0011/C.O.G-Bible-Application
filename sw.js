@@ -2,7 +2,7 @@ const CACHE_NAME = 'cog-bible-v1.3.0';
 const STATIC_ASSETS = [
   "./",
   "./index.html",
-  "./logo.png",
+  "./logo.jpg",
   "./manifest.json",
   "./data/1 Chronicles.json",
   "./data/1 Corinthians.json",
@@ -70,7 +70,7 @@ const STATIC_ASSETS = [
   "./data/Titus.json",
   "./data/Zechariah.json",
   "./data/Zephaniah.json",
-  "./assets/index-BW3m22cC.js",
+  "./assets/index-C2thiYoU.js",
   "./assets/index-CFxgZ2MY.css"
 ];
 
