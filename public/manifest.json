@@ -1,59 +1,30 @@
 {
   "name": "COG (T.J.R) Bible",
   "short_name": "COG Bible",
-  "description": "The Church of God (Truth, Justice, and Righteousness) Bible App - Parallel Cebuano (Bugna) & English (KJV)",
+  "id": "./",
+  "description": "The Church of God (Truth, Justice, and Righteousness) Bible App",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
   "display_override": ["standalone", "minimal-ui"],
   "background_color": "#1B3A6B",
   "theme_color": "#1B3A6B",
-  "orientation": "portrait",
+  "orientation": "portrait-primary",
   "categories": ["books", "education", "reference", "religion"],
   "lang": "en",
   "dir": "ltr",
   "icons": [
     {
-      "src": "./app-icon.png",
+      "src": "./logo.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "any"
+      "purpose": "any maskable"
     },
     {
-      "src": "./app-icon.png",
+      "src": "./logo.png",
       "sizes": "192x192",
       "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "./app-icon.png",
-      "sizes": "180x180",
-      "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "./app-icon.png",
-      "sizes": "152x152",
-      "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "./app-icon.png",
-      "sizes": "144x144",
-      "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "./app-icon.png",
-      "sizes": "128x128",
-      "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "./app-icon.png",
-      "sizes": "96x96",
-      "type": "image/png",
-      "purpose": "any"
+      "purpose": "any maskable"
     }
   ],
   "shortcuts": [
@@ -61,45 +32,19 @@
       "name": "Open Bible",
       "short_name": "Bible",
       "url": "./#bible",
-      "icons": [
-        {
-          "src": "./app-icon.png",
-          "sizes": "96x96",
-          "type": "image/png"
-        }
-      ]
+      "icons": [{ "src": "./logo.png", "sizes": "96x96", "type": "image/png" }]
     },
     {
       "name": "Open Quiz",
       "short_name": "Quiz",
       "url": "./#quiz",
-      "icons": [
-        {
-          "src": "./app-icon.png",
-          "sizes": "96x96",
-          "type": "image/png"
-        }
-      ]
+      "icons": [{ "src": "./logo.png", "sizes": "96x96", "type": "image/png" }]
     },
     {
       "name": "Open Dictionary",
       "short_name": "Dictionary",
       "url": "./#dictionary",
-      "icons": [
-        {
-          "src": "./app-icon.png",
-          "sizes": "96x96",
-          "type": "image/png"
-        }
-      ]
-    }
-  ],
-  "screenshots": [
-    {
-      "src": "./app-icon.png",
-      "sizes": "540x720",
-      "type": "image/png",
-      "form_factor": "narrow"
+      "icons": [{ "src": "./logo.png", "sizes": "96x96", "type": "image/png" }]
     }
   ],
   "prefer_related_applications": false
