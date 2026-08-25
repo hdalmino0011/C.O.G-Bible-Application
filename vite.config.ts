@@ -18,8 +18,7 @@ function generateOfflineServiceWorker() {
       const precache = [
         './',
         './index.html',
-        './logo.jpg',
-        './app-icon.png',
+        './logo.png',
         './manifest.json',
         ...bibleData,
         ...builtAssets,
