@@ -1,9 +1,8 @@
-const CACHE_NAME = 'cog-bible-v1.3.3';
+const CACHE_NAME = 'cog-bible-v1.3.0';
 const STATIC_ASSETS = [
   "./",
   "./index.html",
-  "./logo.jpg",
-  "./app-icon.png",
+  "./logo.png",
   "./manifest.json",
   "./data/1 Chronicles.json",
   "./data/1 Corinthians.json",
@@ -71,10 +70,8 @@ const STATIC_ASSETS = [
   "./data/Titus.json",
   "./data/Zechariah.json",
   "./data/Zephaniah.json",
-  "./assets/app-icon-DLdxqNg3.png",
-  "./assets/index-DFLQ4-hX.js",
-  "./assets/index-dkfLfdvw.css",
-  "./assets/manifest-B5Jk_S2A.json"
+  "./assets/index-CFxgZ2MY.css",
+  "./assets/index-DxS87rBL.js"
 ];
 
 // Install: Cache essential assets including the entire offline verses.json database
