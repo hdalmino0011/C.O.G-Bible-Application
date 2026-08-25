@@ -110,7 +110,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
       <div className="bg-white dark:bg-[#182234] border border-[#E3DFD3] dark:border-[#2A3552] rounded-2xl p-5 shadow-xs space-y-4">
         <div className="flex items-center gap-3 pb-3 border-b border-gray-100 dark:border-slate-700">
           <img
-            src="./logo.jpg"
+            src="./logo.png"
             alt="The Church of God Seal"
             className="w-14 h-14 rounded-full border-2 border-[#C9A227] shadow-md object-contain bg-[#142748] p-1"
             referrerPolicy="no-referrer"
@@ -137,11 +137,15 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
             <span className="text-gray-500 dark:text-gray-400">Version:</span>
             <span className="font-semibold text-gray-800 dark:text-gray-100">1.2.0 (Enhanced Edition)</span>
           </div>
-          <div className="flex justify-between py-1">
+          <div className="flex justify-between py-1 border-b border-gray-100 dark:border-slate-800">
             <span className="text-gray-500 dark:text-gray-400">Bible Versions:</span>
             <span className="font-semibold text-gray-800 dark:text-gray-100 text-right">
               Cebuano (Bugna) &amp; English (KJV)
             </span>
+          </div>
+          <div className="flex justify-between py-1">
+            <span className="text-gray-500 dark:text-gray-400">Developer / Author:</span>
+            <span className="font-semibold text-gray-800 dark:text-gray-100">Hanz Dalmino</span>
           </div>
         </div>
       </div>
