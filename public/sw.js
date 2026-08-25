@@ -1,4 +1,4 @@
-const CACHE_NAME = 'cog-bible-v1.3.2';
+const CACHE_NAME = 'cog-bible-v1.3.0';
 const STATIC_ASSETS = __PRECACHE_ASSETS__;
 
 // Install: Cache essential assets including the entire offline verses.json database
