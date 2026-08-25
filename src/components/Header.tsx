@@ -56,7 +56,7 @@ export const Header: React.FC<HeaderProps> = ({
           aria-label="COG Logo"
         >
           <img
-            src="./logo.jpg"
+            src="./logo.png"
             alt="COG Logo"
             className="w-full h-full object-cover"
             referrerPolicy="no-referrer"
