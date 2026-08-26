@@ -17,10 +17,10 @@ function keepPortraitOrientation() {
   });
 }
 
-// Register the service worker in production builds so the installed app works offline.
+// Register the service worker in production so the installed app works offline.
 if ('serviceWorker' in navigator && import.meta.env.PROD) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('./sw.js').catch((err) => {
+    navigator.serviceWorker.register('./sw.js', {updateViaCache: 'none'}).catch((err) => {
       console.log('SW registration error: ', err);
     });
     keepPortraitOrientation();
@@ -34,4 +34,3 @@ createRoot(document.getElementById('root')!).render(
     <App />
   </StrictMode>,
 );
-
