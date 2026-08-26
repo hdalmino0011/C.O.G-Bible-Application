@@ -14,38 +14,14 @@
   "lang": "en",
   "dir": "ltr",
   "icons": [
-    {
-      "src": "./logo.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "any maskable"
-    },
-    {
-      "src": "./logo.png",
-      "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "any maskable"
-    }
+    {"src": "./app-icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any"},
+    {"src": "./app-icon.png", "sizes": "512x512", "type": "image/png", "purpose": "any"},
+    {"src": "./app-icon-maskable.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable"}
   ],
   "shortcuts": [
-    {
-      "name": "Open Bible",
-      "short_name": "Bible",
-      "url": "./#bible",
-      "icons": [{ "src": "./logo.png", "sizes": "96x96", "type": "image/png" }]
-    },
-    {
-      "name": "Open Quiz",
-      "short_name": "Quiz",
-      "url": "./#quiz",
-      "icons": [{ "src": "./logo.png", "sizes": "96x96", "type": "image/png" }]
-    },
-    {
-      "name": "Open Dictionary",
-      "short_name": "Dictionary",
-      "url": "./#dictionary",
-      "icons": [{ "src": "./logo.png", "sizes": "96x96", "type": "image/png" }]
-    }
+    {"name": "Open Bible", "short_name": "Bible", "url": "./#bible", "icons": [{"src": "./app-icon-192.png", "sizes": "192x192", "type": "image/png"}]},
+    {"name": "Open Quiz", "short_name": "Quiz", "url": "./#quiz", "icons": [{"src": "./app-icon-192.png", "sizes": "192x192", "type": "image/png"}]},
+    {"name": "Open Dictionary", "short_name": "Dictionary", "url": "./#dictionary", "icons": [{"src": "./app-icon-192.png", "sizes": "192x192", "type": "image/png"}]}
   ],
   "prefer_related_applications": false
 }
