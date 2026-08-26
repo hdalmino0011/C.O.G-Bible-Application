@@ -1,8 +1,10 @@
-const CACHE_NAME = 'cog-bible-v1.3.0';
+const CACHE_NAME = 'cog-bible-v1.4.0';
 const STATIC_ASSETS = [
   "./",
   "./index.html",
-  "./logo.png",
+  "./app-icon-192.png",
+  "./app-icon.png",
+  "./app-icon-maskable.png",
   "./manifest.json",
   "./data/1 Chronicles.json",
   "./data/1 Corinthians.json",
