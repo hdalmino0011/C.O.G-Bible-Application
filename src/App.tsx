@@ -52,6 +52,9 @@ import { BIBLE_BOOKS, normalizeBookName } from './data/books';
 import { getRandomDailyVerse } from './data/dailyVerses';
 import { sendDailyVerseNotification } from './utils/notifications';
 
+// Top-level static glob for all Bible JSON datasets so Vite compiles them into instant modules
+const bibleModules = import.meta.glob<Record<number, VerseItem[]>>('../data/*.json');
+
 export default function App() {
   const [showSplash, setShowSplash] = useState(true);
   const [bibleData, setBibleData] = useState<BibleData>({});
@@ -131,9 +134,10 @@ export default function App() {
   };
 
   const loadSingleBook = useCallback(async (bookName: string) => {
+    if (!bookName) return null;
+
     // Strategy 1: Vite dynamic module import (Bundled directly by Vite with chunk hashing)
     try {
-      const bibleModules = import.meta.glob('../data/*.json');
       const targetKey = `../data/${bookName}.json`;
       if (bibleModules && bibleModules[targetKey]) {
         const moduleResult = await bibleModules[targetKey]();
