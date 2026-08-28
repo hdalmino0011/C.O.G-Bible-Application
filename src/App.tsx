@@ -94,37 +94,53 @@ export default function App() {
     }, 2800);
   }, []);
 
-  // Helper to construct accurate asset URLs regardless of deployment subdirectory
-  const getBookDataUrl = (name: string) => {
+  // Helper to construct candidate asset URLs regardless of deployment subdirectory
+  const getBookCandidateUrls = (name: string) => {
+    const encoded = encodeURIComponent(name);
     const base = import.meta.env.BASE_URL || './';
     const prefix = base.endsWith('/') ? base : `${base}/`;
-    return `${prefix}data/${encodeURIComponent(name)}.json`;
+    return [
+      `${prefix}data/${encoded}.json`,
+      `./data/${encoded}.json`,
+      `/data/${encoded}.json`,
+      `data/${encoded}.json`
+    ];
   };
 
   const loadSingleBook = useCallback(async (bookName: string) => {
-    try {
-      const res = await fetch(getBookDataUrl(bookName));
-      if (!res.ok) throw new Error(`Status ${res.status}`);
-      const rawText = await res.text();
-      let bookContent: any;
+    const urls = getBookCandidateUrls(bookName);
+
+    for (let i = 0; i < urls.length; i++) {
+      const url = urls[i];
       try {
-        bookContent = JSON.parse(rawText);
-      } catch (parseErr) {
-        // Fallback sanitize for control characters in malformed/corrupted streams
-        const sanitized = rawText.replace(/[\u0000-\u001F\u007F-\u009F]/g, (char) => {
-          if (char === '\n') return '\\n';
-          if (char === '\r') return '\\r';
-          if (char === '\t') return '\\t';
-          return '';
-        });
-        bookContent = JSON.parse(sanitized);
+        let res = await fetch(url);
+        if (!res.ok) continue;
+
+        let rawText = await res.text();
+        let trimmed = rawText.trim();
+
+        // If returned HTML (e.g. 404/SPA index.html fallback), retry with cache-busting query
+        if (trimmed.startsWith('<') || !trimmed.startsWith('{')) {
+          const freshRes = await fetch(`${url}?t=${Date.now()}`, { cache: 'no-store' });
+          if (!freshRes.ok) continue;
+          rawText = await freshRes.text();
+          trimmed = rawText.trim();
+        }
+
+        if (!trimmed.startsWith('{')) continue;
+
+        let bookContent = JSON.parse(trimmed);
+        if (bookContent && typeof bookContent === 'object') {
+          setBibleData(prev => ({ ...prev, [bookName]: bookContent }));
+          return bookContent;
+        }
+      } catch (err) {
+        // Try next candidate URL
       }
-      setBibleData(prev => ({ ...prev, [bookName]: bookContent }));
-      return bookContent;
-    } catch (err) {
-      console.warn(`Could not load scriptures for ${bookName}:`, err);
-      return null;
     }
+
+    console.warn(`Could not load scriptures for ${bookName}`);
+    return null;
   }, []);
 
   // 1. Load Initial Book immediately for sub-second startup, then background load the rest
