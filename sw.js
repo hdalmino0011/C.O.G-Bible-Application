@@ -1,17 +1,17 @@
-const CACHE_NAME = 'cog-bible-v3.2.0';
-const STATIC_ASSETS = __PRECACHE_ASSETS_LIST__;
+const CACHE_NAME = 'cog-bible-v4.0.0';
+const STATIC_ASSETS = typeof __PRECACHE_ASSETS_LIST__ !== 'undefined' ? __PRECACHE_ASSETS_LIST__ : [];
 
 // Install: Cache essential assets, including the offline Bible database
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then(async (cache) => {
-        if (Array.isArray(STATIC_ASSETS)) {
+        if (Array.isArray(STATIC_ASSETS) && STATIC_ASSETS.length > 0) {
           await Promise.allSettled(
             STATIC_ASSETS.map((url) =>
               fetch(url)
                 .then((res) => {
-                  if (res.ok) {
+                  if (res && res.status === 200) {
                     const ct = res.headers.get('content-type') || '';
                     if (url.endsWith('.json') && ct.includes('text/html')) {
                       return; // Do not cache HTML fallbacks as JSON
@@ -28,12 +28,16 @@ self.addEventListener('install', (event) => {
   );
 });
 
-// Activate: Remove caches from older app versions
+// Activate: Purge all older and stale caches immediately
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys()
       .then((keys) => Promise.all(
-        keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key))
+        keys.map((key) => {
+          if (key !== CACHE_NAME) {
+            return caches.delete(key);
+          }
+        })
       ))
       .then(() => self.clients.claim())
   );
@@ -56,25 +60,29 @@ self.addEventListener('fetch', (event) => {
         })
         .catch(async () => {
           const cached = await caches.match(event.request);
-          if (cached) return cached;
+          if (cached && cached.status === 200) return cached;
           const indexHtml = await caches.match('./index.html');
-          if (indexHtml) return indexHtml;
+          if (indexHtml && indexHtml.status === 200) return indexHtml;
           const rootCached = await caches.match('./');
-          return rootCached || new Response('Offline', { status: 503, headers: { 'Content-Type': 'text/plain' } });
+          if (rootCached && rootCached.status === 200) return rootCached;
+          return new Response('Offline', { status: 503, headers: { 'Content-Type': 'text/plain' } });
         })
     );
     return;
   }
 
-  // Assets and Bible data files: Cache first, fallback to network
+  // Assets and Bible data files: Cache first (only if valid 200 OK), fallback to network
   event.respondWith(
     caches.match(event.request).then(async (cachedResponse) => {
       if (cachedResponse) {
-        // If it's a JSON data request, verify it's not a corrupted/HTML cached response
-        if (event.request.url.includes('/data/') && event.request.url.endsWith('.json')) {
+        // If not 200 OK, delete corrupted cache entry
+        if (cachedResponse.status !== 200) {
+          const cache = await caches.open(CACHE_NAME);
+          await cache.delete(event.request);
+        } else if (event.request.url.includes('/data/') && event.request.url.endsWith('.json')) {
           const ct = cachedResponse.headers.get('content-type') || '';
           if (ct.includes('text/html')) {
-            // Bad cached response, delete it and fetch from network
+            // Bad cached response (HTML fallback), delete it and fetch from network
             const cache = await caches.open(CACHE_NAME);
             await cache.delete(event.request);
           } else {

@@ -1,5 +1,5 @@
-const CACHE_NAME = 'cog-bible-v3.2.0';
-const STATIC_ASSETS = [
+const CACHE_NAME = 'cog-bible-v4.0.0';
+const STATIC_ASSETS = typeof [
   "./",
   "./index.html",
   "./app-icon-192.png",
@@ -72,21 +72,87 @@ const STATIC_ASSETS = [
   "./data/Titus.json",
   "./data/Zechariah.json",
   "./data/Zephaniah.json",
-  "./assets/index-B6YQT-q0.js",
-  "./assets/index-Cv-CeVXg.css"
-];
+  "./assets/1 Chronicles-D-7z0MLn.js",
+  "./assets/1 Corinthians--VZi7Lnm.js",
+  "./assets/1 John-Cb6nfyrL.js",
+  "./assets/1 Kings-BF1fMdIk.js",
+  "./assets/1 Peter-UZWpHfyB.js",
+  "./assets/1 Samuel-B2j-O4wl.js",
+  "./assets/1 Thessalonians-3cCQCCZ4.js",
+  "./assets/1 Timothy-BOLRhqE0.js",
+  "./assets/2 Chronicles-Bx63pjXy.js",
+  "./assets/2 Corinthians-DYdpXpxx.js",
+  "./assets/2 John-e4mN4zVB.js",
+  "./assets/2 Kings-DwY2DTrr.js",
+  "./assets/2 Peter-D5YqUjal.js",
+  "./assets/2 Samuel-CzP2YOWb.js",
+  "./assets/2 Thessalonians-BiblXsQI.js",
+  "./assets/2 Timothy-C-SpXJl-.js",
+  "./assets/3 John-BiFApTLD.js",
+  "./assets/Acts-Bk8ZZNJP.js",
+  "./assets/Amos-BoZbqgvb.js",
+  "./assets/Colossians-CtykPyip.js",
+  "./assets/Daniel-r5oeLfvn.js",
+  "./assets/Deuteronomy-BPbcIIpQ.js",
+  "./assets/Ecclesiastes-m_KEROEy.js",
+  "./assets/Ephesians-DsEcZkdK.js",
+  "./assets/Esther-DQy8KOVH.js",
+  "./assets/Exodus-C4Gji8fH.js",
+  "./assets/Ezekiel-CaW4La83.js",
+  "./assets/Ezra-BKn_Fh_8.js",
+  "./assets/Galatians-CS_Y3pVB.js",
+  "./assets/Genesis-vJhox-co.js",
+  "./assets/Habakkuk-B0c5DXTT.js",
+  "./assets/Haggai-BP-trmey.js",
+  "./assets/Hebrews-yKlb9rhd.js",
+  "./assets/Hosea-Dpm85LRz.js",
+  "./assets/Isaiah-CKjJxVdd.js",
+  "./assets/James-X_yd3_Gn.js",
+  "./assets/Jeremiah-y2VSH0lD.js",
+  "./assets/Job-BfhQWRBK.js",
+  "./assets/Joel-oSKgxtbt.js",
+  "./assets/John-DDNWdEBg.js",
+  "./assets/Jonah-BR7P43p3.js",
+  "./assets/Joshua-D1rHKgrR.js",
+  "./assets/Jude-vCjI-H6E.js",
+  "./assets/Judges-fZp02Ald.js",
+  "./assets/Lamentations-DPc_JQIe.js",
+  "./assets/Leviticus-DEXzA5Mp.js",
+  "./assets/Luke-B8PHXK0d.js",
+  "./assets/Malachi-C0kbl5mr.js",
+  "./assets/Mark-D_7b83-q.js",
+  "./assets/Matthew-pAhBcV9C.js",
+  "./assets/Micah-CQoMvF8D.js",
+  "./assets/Nahum-1WnX4vkQ.js",
+  "./assets/Nehemiah-DIMybACa.js",
+  "./assets/Numbers-D1DHXtfM.js",
+  "./assets/Obadiah-z0Lwlwib.js",
+  "./assets/Philemon-5USrcYcM.js",
+  "./assets/Philippians-2OGshWMx.js",
+  "./assets/Proverbs-Yq34PTaa.js",
+  "./assets/Psalms-CW53BlmH.js",
+  "./assets/Revelation-Dm6TdO__.js",
+  "./assets/Romans-DfVyWyxV.js",
+  "./assets/Ruth-JodS5lP8.js",
+  "./assets/Song of Solomon-Ypoz6XF1.js",
+  "./assets/Titus-4yRFAR9C.js",
+  "./assets/Zechariah-CoYWbSia.js",
+  "./assets/Zephaniah-DmEogkA8.js",
+  "./assets/index-DGsDG53v.js",
+  "./assets/index-DZ6VLWLG.css"
+] !== 'undefined' ? __PRECACHE_ASSETS_LIST__ : [];
 
 // Install: Cache essential assets, including the offline Bible database
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then(async (cache) => {
-        if (Array.isArray(STATIC_ASSETS)) {
+        if (Array.isArray(STATIC_ASSETS) && STATIC_ASSETS.length > 0) {
           await Promise.allSettled(
             STATIC_ASSETS.map((url) =>
               fetch(url)
                 .then((res) => {
-                  if (res.ok) {
+                  if (res && res.status === 200) {
                     const ct = res.headers.get('content-type') || '';
                     if (url.endsWith('.json') && ct.includes('text/html')) {
                       return; // Do not cache HTML fallbacks as JSON
@@ -103,12 +169,16 @@ self.addEventListener('install', (event) => {
   );
 });
 
-// Activate: Remove caches from older app versions
+// Activate: Purge all older and stale caches immediately
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys()
       .then((keys) => Promise.all(
-        keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key))
+        keys.map((key) => {
+          if (key !== CACHE_NAME) {
+            return caches.delete(key);
+          }
+        })
       ))
       .then(() => self.clients.claim())
   );
@@ -131,25 +201,29 @@ self.addEventListener('fetch', (event) => {
         })
         .catch(async () => {
           const cached = await caches.match(event.request);
-          if (cached) return cached;
+          if (cached && cached.status === 200) return cached;
           const indexHtml = await caches.match('./index.html');
-          if (indexHtml) return indexHtml;
+          if (indexHtml && indexHtml.status === 200) return indexHtml;
           const rootCached = await caches.match('./');
-          return rootCached || new Response('Offline', { status: 503, headers: { 'Content-Type': 'text/plain' } });
+          if (rootCached && rootCached.status === 200) return rootCached;
+          return new Response('Offline', { status: 503, headers: { 'Content-Type': 'text/plain' } });
         })
     );
     return;
   }
 
-  // Assets and Bible data files: Cache first, fallback to network
+  // Assets and Bible data files: Cache first (only if valid 200 OK), fallback to network
   event.respondWith(
     caches.match(event.request).then(async (cachedResponse) => {
       if (cachedResponse) {
-        // If it's a JSON data request, verify it's not a corrupted/HTML cached response
-        if (event.request.url.includes('/data/') && event.request.url.endsWith('.json')) {
+        // If not 200 OK, delete corrupted cache entry
+        if (cachedResponse.status !== 200) {
+          const cache = await caches.open(CACHE_NAME);
+          await cache.delete(event.request);
+        } else if (event.request.url.includes('/data/') && event.request.url.endsWith('.json')) {
           const ct = cachedResponse.headers.get('content-type') || '';
           if (ct.includes('text/html')) {
-            // Bad cached response, delete it and fetch from network
+            // Bad cached response (HTML fallback), delete it and fetch from network
             const cache = await caches.open(CACHE_NAME);
             await cache.delete(event.request);
           } else {

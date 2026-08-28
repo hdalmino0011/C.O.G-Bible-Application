@@ -19,6 +19,7 @@ import { SearchModal } from './components/SearchModal';
 
 import {
   BibleData,
+  BookChapters,
   HighlightColor,
   NoteItem,
   QuizStats,
@@ -130,6 +131,23 @@ export default function App() {
   };
 
   const loadSingleBook = useCallback(async (bookName: string) => {
+    // Strategy 1: Vite dynamic module import (Bundled directly by Vite with chunk hashing)
+    try {
+      const bibleModules = import.meta.glob('../data/*.json');
+      const targetKey = `../data/${bookName}.json`;
+      if (bibleModules && bibleModules[targetKey]) {
+        const moduleResult = await bibleModules[targetKey]();
+        const content = (moduleResult && ((moduleResult as any).default || moduleResult)) as BookChapters;
+        if (content && typeof content === 'object' && Object.keys(content).length > 0) {
+          setBibleData(prev => ({ ...prev, [bookName]: content }));
+          return content;
+        }
+      }
+    } catch {
+      // Fallback to fetch
+    }
+
+    // Strategy 2: Direct URL fetch across candidate paths
     const urls = getBookCandidateUrls(bookName);
 
     for (let i = 0; i < urls.length; i++) {
@@ -151,12 +169,12 @@ export default function App() {
 
         if (!trimmed.startsWith('{')) continue;
 
-        let bookContent = JSON.parse(trimmed);
-        if (bookContent && typeof bookContent === 'object') {
+        let bookContent = JSON.parse(trimmed) as BookChapters;
+        if (bookContent && typeof bookContent === 'object' && Object.keys(bookContent).length > 0) {
           setBibleData(prev => ({ ...prev, [bookName]: bookContent }));
           return bookContent;
         }
-      } catch (err) {
+      } catch {
         // Try next candidate URL
       }
     }
