@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 
 interface SplashProps {
@@ -7,25 +7,31 @@ interface SplashProps {
 
 export const Splash: React.FC<SplashProps> = ({ onComplete }) => {
   const [visible, setVisible] = useState(true);
+  const onCompleteRef = useRef(onComplete);
+  onCompleteRef.current = onComplete;
+
+  const handleFinish = () => {
+    setVisible(false);
+    setTimeout(() => {
+      onCompleteRef.current();
+    }, 300);
+  };
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setVisible(false);
-      setTimeout(onComplete, 400);
-    }, 2200);
-
+    const timer = setTimeout(handleFinish, 1400);
     return () => clearTimeout(timer);
-  }, [onComplete]);
+  }, []);
 
   return (
     <AnimatePresence>
       {visible && (
         <motion.div
           id="splash-screen"
+          onClick={handleFinish}
           initial={{ opacity: 1 }}
-          exit={{ opacity: 0, scale: 1.02 }}
-          transition={{ duration: 0.4 }}
-          className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-gradient-to-b from-[#0E2143] via-[#1B3A6B] to-[#2C548F] px-6 text-center select-none"
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.3 }}
+          className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-gradient-to-b from-[#0E2143] via-[#1B3A6B] to-[#2C548F] px-6 text-center select-none cursor-pointer"
         >
           <motion.div
             initial={{ scale: 0.8, opacity: 0, y: 20 }}

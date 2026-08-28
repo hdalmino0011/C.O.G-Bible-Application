@@ -1,5 +1,11 @@
-const CACHE_NAME = 'cog-bible-v1.4.0';
-const STATIC_ASSETS = __PRECACHE_ASSETS__;
+const CACHE_NAME = 'cog-bible-v1.5.0';
+const STATIC_ASSETS = typeof __PRECACHE_ASSETS__ !== 'undefined' ? __PRECACHE_ASSETS__ : [
+  './',
+  './index.html',
+  './manifest.json',
+  './logo.png',
+  './app-icon-192.png'
+];
 
 // Install: Cache essential assets, including the offline Bible database.
 self.addEventListener('install', (event) => {

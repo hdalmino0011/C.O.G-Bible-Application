@@ -1,6 +1,7 @@
 import {StrictMode} from 'react';
 import {createRoot} from 'react-dom/client';
 import App from './App.tsx';
+import {ErrorBoundary} from './components/ErrorBoundary.tsx';
 import './index.css';
 
 function keepPortraitOrientation() {
@@ -17,20 +18,31 @@ function keepPortraitOrientation() {
   });
 }
 
-// Register the service worker in production so the installed app works offline.
-if ('serviceWorker' in navigator && import.meta.env.PROD) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('./sw.js', {updateViaCache: 'none'}).catch((err) => {
-      console.log('SW registration error: ', err);
+// Register the service worker only in production builds so dev preview is not hijacked.
+if ('serviceWorker' in navigator) {
+  if (import.meta.env.PROD) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('./sw.js', {updateViaCache: 'none'}).catch((err) => {
+        console.log('SW registration error: ', err);
+      });
+      keepPortraitOrientation();
     });
-    keepPortraitOrientation();
-  });
+  } else {
+    // In dev mode, ensure old service workers are cleaned up so preview loads fresh
+    navigator.serviceWorker.getRegistrations().then((registrations) => {
+      for (const registration of registrations) {
+        registration.unregister();
+      }
+    });
+  }
 }
 
 window.addEventListener('orientationchange', keepPortraitOrientation);
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <App />
+    <ErrorBoundary>
+      <App />
+    </ErrorBoundary>
   </StrictMode>,
 );
