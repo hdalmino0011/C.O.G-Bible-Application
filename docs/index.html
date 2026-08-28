@@ -12,9 +12,23 @@
     <meta property="og:title" content="COG (T.J.R) Bible" />
     <meta property="og:description" content="The Church of God (Truth, Justice, and Righteousness) Bible App featuring Cebuano (Bugna) & English (KJV) parallel text, Bible Quiz, Dictionary, and customizable reading settings." />
     <title>COG (T.J.R) Bible</title>
-  <link rel="icon" type="image/png" href="./logo.png" />
-  <link rel="apple-touch-icon" href="./logo.png" />
-  <link rel="manifest" href="./assets/manifest-CHF7-g6h.json" />
+    <link rel="icon" type="image/png" href="./logo.png" />
+    <link rel="apple-touch-icon" href="./logo.png" />
+    <link rel="manifest" href="./assets/manifest-CHF7-g6h.json" />
+
+    <script type="text/javascript">
+      // GitHub Pages SPA redirect receiver
+      (function(l) {
+        if (l.search[1] === '/' ) {
+          var decoded = l.search.slice(1).split('&').map(function(s) { 
+            return s.replace(/~and~/g, '&');
+          }).join('?');
+          window.history.replaceState(null, null,
+              l.pathname.slice(0, -1) + decoded + l.hash
+          );
+        }
+      }(window.location));
+    </script>
 
     <script type="module" crossorigin src="./assets/index-DGsDG53v.js"></script>
     <link rel="stylesheet" crossorigin href="./assets/index-DZ6VLWLG.css">
