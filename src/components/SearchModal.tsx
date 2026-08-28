@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
-import { Search, X, BookOpen, ArrowRight, Loader2 } from 'lucide-react';
-import { ALL_BOOK_NAMES, normalizeBookName } from '../data/books';
+import { motion } from 'motion/react';
+import { Search, X, BookOpen, ArrowRight, Sparkles } from 'lucide-react';
+import { normalizeBookName } from '../data/books';
 import { BibleData } from '../types';
 
 interface SearchModalProps {
@@ -10,6 +10,16 @@ interface SearchModalProps {
   bibleData: BibleData;
   onNavigateToVerse: (book: string, chapter: number, verse?: number) => void;
 }
+
+const DOCTRINE_SHORTCUTS = [
+  { label: 'The Church of God', ref: '1 Timothy 3:15', desc: 'Pillar & Ground of the Truth' },
+  { label: 'Founded by Jesus Christ', ref: 'Matthew 16:18', desc: 'Upon this Rock I will build My Church' },
+  { label: 'Purchased by His Blood', ref: 'Acts 20:28', desc: 'Feed the Church of God' },
+  { label: 'Sanctified in Christ', ref: '1 Corinthians 1:2', desc: 'Unto the Church of God at Corinth' },
+  { label: 'Apostolic Foundation', ref: 'Ephesians 2:20', desc: 'Jesus Christ Chief Cornerstone' },
+  { label: 'Truth, Justice, Righteousness', ref: 'Jeremiah 4:2', desc: 'Pillars of God\'s Name' },
+  { label: 'Commandments & Faith', ref: 'Revelation 14:12', desc: 'Patience of the Saints' }
+];
 
 export const SearchModal: React.FC<SearchModalProps> = ({
   isOpen,
@@ -65,7 +75,7 @@ export const SearchModal: React.FC<SearchModalProps> = ({
                 ceb: v.ceb,
                 en: v.en
               });
-              if (results.length >= 60) break; // Limit for performance
+              if (results.length >= 60) break;
             }
           }
         }
@@ -84,16 +94,28 @@ export const SearchModal: React.FC<SearchModalProps> = ({
     onClose();
   };
 
+  const handleShortcutClick = (refStr: string) => {
+    const match = refStr.match(/^(\d?\s*[a-zA-ZÀ-ÿ\s-]+?)\s+(\d+)(?::(\d+))?/i);
+    if (match) {
+      const bookName = normalizeBookName(match[1].trim()) || match[1].trim();
+      const chapter = parseInt(match[2], 10);
+      const verse = match[3] ? parseInt(match[3], 10) : 1;
+      handleSelect(bookName, chapter, verse);
+    } else {
+      setQuery(refStr);
+    }
+  };
+
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-center p-3 sm:p-6 bg-black/60 backdrop-blur-xs pt-16 sm:pt-20">
       <motion.div
         initial={{ opacity: 0, scale: 0.95, y: -20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.95 }}
-        className="w-full max-w-2xl bg-white dark:bg-[#182234] rounded-2xl shadow-2xl border border-gray-200 dark:border-slate-700 overflow-hidden flex flex-col max-h-[80vh]"
+        className="w-full max-w-2xl bg-white dark:bg-[#142036] rounded-2xl shadow-2xl border border-[#E2DED2] dark:border-[#22314E] overflow-hidden flex flex-col max-h-[85vh]"
       >
         {/* Search Input Bar */}
-        <div className="flex items-center gap-3 px-4 py-3.5 border-b border-gray-200 dark:border-slate-700 bg-white dark:bg-[#1E293B]">
+        <div className="flex items-center gap-2.5 px-4 py-3.5 border-b border-[#E2DED2] dark:border-[#22314E] bg-white dark:bg-[#10243E]">
           <Search className="w-5 h-5 text-[#C9A227] flex-shrink-0" />
           <input
             id="modal-search-input"
@@ -101,22 +123,22 @@ export const SearchModal: React.FC<SearchModalProps> = ({
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search reference (e.g. Bugna 1:5, John 3:16) or keywords..."
-            className="w-full text-sm sm:text-base bg-transparent text-gray-800 dark:text-white placeholder-gray-400 focus:outline-none"
+            className="w-full text-sm sm:text-base bg-transparent text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none"
             autoFocus
           />
           {query && (
             <button
               onClick={() => setQuery('')}
-              className="p-1 rounded-full text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+              className="px-2.5 py-1 text-xs font-semibold rounded-lg bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-slate-600 transition-colors flex items-center gap-1 shrink-0"
               aria-label="Clear search input"
             >
-              <X className="w-4 h-4" />
+              Clear
             </button>
           )}
           <button
             onClick={onClose}
-            className="p-1.5 rounded-xl border border-gray-200 dark:border-slate-700 text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-slate-800 active:scale-95 transition-all flex items-center justify-center"
-            aria-label="Close search"
+            className="p-1.5 rounded-xl border border-gray-200 dark:border-[#22314E] text-gray-500 hover:text-gray-800 dark:text-gray-300 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-slate-800 active:scale-95 transition-all flex items-center justify-center shrink-0"
+            aria-label="Close search modal"
             title="Close"
           >
             <X className="w-4 h-4" />
@@ -124,13 +146,44 @@ export const SearchModal: React.FC<SearchModalProps> = ({
         </div>
 
         {/* Search Suggestions or Results */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-2.5">
+        <div className="flex-1 overflow-y-auto p-4 space-y-3">
           {!query ? (
-            <div className="py-8 text-center text-gray-400 space-y-2">
-              <BookOpen className="w-8 h-8 mx-auto text-[#C9A227]" />
-              <p className="text-xs sm:text-sm font-serif max-w-md mx-auto">
-                Type a scripture reference in Cebuano or English (e.g. <span className="text-[#1B3A6B] dark:text-[#E4C765] font-semibold">Bugna 1:5</span>, <span className="text-[#1B3A6B] dark:text-[#E4C765] font-semibold">1 Timothy 3:15</span>, <span className="text-[#1B3A6B] dark:text-[#E4C765] font-semibold">Salmo 23:1</span>) or any word in Cebuano or English.
-              </p>
+            <div className="space-y-4">
+              <div className="text-center text-gray-500 dark:text-gray-400 py-3 space-y-1">
+                <BookOpen className="w-7 h-7 mx-auto text-[#C9A227]" />
+                <p className="text-xs sm:text-sm font-serif">
+                  Type a scripture reference or keyword in Cebuano or English
+                </p>
+              </div>
+
+              {/* Doctrinal Quick Reference Tags */}
+              <div className="space-y-2">
+                <h4 className="text-[11px] font-bold uppercase tracking-wider text-[#C9A227] flex items-center gap-1.5">
+                  <Sparkles className="w-3.5 h-3.5" />
+                  Foundational Scriptures &amp; Doctrines
+                </h4>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  {DOCTRINE_SHORTCUTS.map((item) => (
+                    <button
+                      key={item.ref}
+                      onClick={() => handleShortcutClick(item.ref)}
+                      className="p-2.5 rounded-xl border border-[#E2DED2] dark:border-[#22314E] hover:border-[#C9A227] bg-gray-50/70 dark:bg-slate-800/60 hover:bg-[#C9A227]/10 text-left transition-all group flex flex-col justify-between"
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="font-bold text-xs text-[#0E1B33] dark:text-[#E4C765] group-hover:text-[#1B3A6B] dark:group-hover:text-white">
+                          {item.label}
+                        </span>
+                        <span className="text-[10px] font-mono font-semibold text-[#C9A227] bg-[#C9A227]/15 px-1.5 py-0.5 rounded">
+                          {item.ref}
+                        </span>
+                      </div>
+                      <span className="text-[11px] text-gray-500 dark:text-gray-400 mt-1 line-clamp-1">
+                        {item.desc}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              </div>
             </div>
           ) : searchResults.length === 0 ? (
             <div className="py-12 text-center text-gray-400">
@@ -138,32 +191,32 @@ export const SearchModal: React.FC<SearchModalProps> = ({
             </div>
           ) : (
             searchResults.map((res, i) => (
-              <div
-                key={i}
+              <button
+                key={`${res.book}-${res.chapter}-${res.verse}-${i}`}
                 onClick={() => handleSelect(res.book, res.chapter, res.verse)}
-                className="p-3 rounded-xl border border-gray-100 dark:border-slate-700/60 bg-[#F7F5EF]/60 dark:bg-slate-800/60 hover:bg-[#C9A227]/10 hover:border-[#C9A227] cursor-pointer transition-all space-y-1.5"
+                className="w-full text-left p-3 rounded-xl border border-[#E2DED2] dark:border-[#22314E] hover:border-[#C9A227] bg-white dark:bg-[#10243E] hover:bg-[#C9A227]/10 transition-all space-y-1.5 group shadow-xs"
               >
-                <div className="flex items-center justify-between">
-                  <span className="font-serif font-bold text-xs sm:text-sm text-[#1B3A6B] dark:text-[#E4C765]">
+                <div className="flex items-center justify-between text-xs font-bold text-[#0E1B33] dark:text-[#E4C765]">
+                  <span>
                     {res.book} {res.chapter}:{res.verse}
                   </span>
-                  <span className="text-[11px] text-[#C9A227] font-semibold flex items-center gap-1">
-                    Open verse <ArrowRight className="w-3 h-3" />
+                  <span className="flex items-center gap-1 text-[11px] text-[#C9A227] opacity-0 group-hover:opacity-100 transition-opacity">
+                    Open <ArrowRight className="w-3.5 h-3.5" />
                   </span>
                 </div>
                 {res.ceb && (
-                  <p className="text-xs text-gray-700 dark:text-gray-300 line-clamp-2">
-                    <strong className="text-[#1B3A6B] dark:text-[#E4C765]">CEB: </strong>
+                  <p className="text-xs text-gray-700 dark:text-gray-200 line-clamp-2">
+                    <span className="text-[10px] font-semibold text-gray-400 mr-1">[CEB]</span>
                     {res.ceb}
                   </p>
                 )}
                 {res.en && (
-                  <p className="text-xs text-gray-600 dark:text-gray-400 line-clamp-2">
-                    <strong className="text-[#1B3A6B] dark:text-[#E4C765]">ENG: </strong>
+                  <p className="text-xs text-gray-600 dark:text-gray-300 line-clamp-2 italic">
+                    <span className="text-[10px] font-semibold text-gray-400 mr-1">[KJV]</span>
                     {res.en}
                   </p>
                 )}
-              </div>
+              </button>
             ))
           )}
         </div>

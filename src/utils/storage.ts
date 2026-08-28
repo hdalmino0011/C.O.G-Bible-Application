@@ -15,7 +15,9 @@ export const DEFAULT_PREFERENCES: UserPreferences = {
   fontSize: 'medium',
   readingLayout: 'parallel',
   showVerseNumbers: true,
-  enableSpeechAutoplay: false
+  enableSpeechAutoplay: false,
+  dailyVerseNotification: true,
+  notificationTime: '07:00'
 };
 
 export function getStoredPreferences(): UserPreferences {

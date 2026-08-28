@@ -27,29 +27,29 @@ export const SavedScreen: React.FC<SavedScreenProps> = ({
 
   const getHighlightDot = (color: HighlightColor) => {
     switch (color) {
-      case 'yellow': return 'bg-[#FFD700]';
-      case 'pink': return 'bg-[#FFB6C1]';
-      case 'green': return 'bg-[#98FB98]';
-      case 'blue': return 'bg-[#87CEEB]';
-      case 'purple': return 'bg-[#D8BFD8]';
-      default: return 'bg-[#FFD700]';
+      case 'yellow': return 'bg-[#FACC15]';
+      case 'pink': return 'bg-[#F472B6]';
+      case 'green': return 'bg-[#4ADE80]';
+      case 'blue': return 'bg-[#60A5FA]';
+      case 'purple': return 'bg-[#C084FC]';
+      default: return 'bg-[#FACC15]';
     }
   };
 
   return (
     <div className="flex-1 overflow-y-auto px-4 py-5 max-w-3xl mx-auto w-full pb-28">
       {/* Header & Tabs */}
-      <div className="flex items-center justify-between border-b border-[#E3DFD3] dark:border-[#2A3552] pb-3 mb-4">
-        <h2 className="font-serif text-xl font-bold text-[#10203D] dark:text-white flex items-center gap-2">
+      <div className="flex items-center justify-between border-b border-[#E2DED2] dark:border-[#22314E] pb-3 mb-4">
+        <h2 className="font-serif text-xl font-bold text-[#0E1B33] dark:text-white flex items-center gap-2">
           <BookOpen className="w-5 h-5 text-[#C9A227]" />
           My Bible Study Library
         </h2>
       </div>
 
-      <div className="grid grid-cols-3 gap-2 p-1 bg-white dark:bg-[#182234] border border-[#E3DFD3] dark:border-[#2A3552] rounded-xl mb-5 shadow-xs">
+      <div className="grid grid-cols-3 gap-2 p-1 bg-white dark:bg-[#142036] border border-[#E2DED2] dark:border-[#22314E] rounded-xl mb-5 shadow-xs">
         <button
           onClick={() => setActiveTab('highlights')}
-          className={`py-2 px-3 text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-1.5 ${
+          className={`py-2 px-3 text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
             activeTab === 'highlights'
               ? 'bg-[#1B3A6B] text-white shadow-xs'
               : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-800'
@@ -60,7 +60,7 @@ export const SavedScreen: React.FC<SavedScreenProps> = ({
         </button>
         <button
           onClick={() => setActiveTab('bookmarks')}
-          className={`py-2 px-3 text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-1.5 ${
+          className={`py-2 px-3 text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
             activeTab === 'bookmarks'
               ? 'bg-[#1B3A6B] text-white shadow-xs'
               : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-800'
@@ -71,7 +71,7 @@ export const SavedScreen: React.FC<SavedScreenProps> = ({
         </button>
         <button
           onClick={() => setActiveTab('notes')}
-          className={`py-2 px-3 text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-1.5 ${
+          className={`py-2 px-3 text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
             activeTab === 'notes'
               ? 'bg-[#1B3A6B] text-white shadow-xs'
               : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-800'
@@ -86,17 +86,17 @@ export const SavedScreen: React.FC<SavedScreenProps> = ({
       {activeTab === 'highlights' && (
         <div className="space-y-3">
           {highlightList.length === 0 ? (
-            <div className="text-center py-16 bg-white dark:bg-[#182234] rounded-2xl border border-dashed border-gray-300 dark:border-slate-700">
+            <div className="text-center py-16 bg-white dark:bg-[#142036] rounded-2xl border border-dashed border-gray-300 dark:border-slate-700">
               <Highlighter className="w-8 h-8 text-gray-300 mx-auto mb-2" />
               <p className="font-serif text-sm italic text-gray-500">
-                No verses highlighted yet. Long-press any verse while reading to highlight.
+                No verses highlighted yet. Select any verse while reading to highlight.
               </p>
             </div>
           ) : (
             highlightList.map((item) => (
               <div
                 key={item.id}
-                className="bg-white dark:bg-[#182234] border border-[#E3DFD3] dark:border-[#2A3552] rounded-xl p-4 shadow-xs hover:border-[#C9A227] transition-all space-y-2"
+                className="bg-white dark:bg-[#142036] border border-[#E2DED2] dark:border-[#22314E] rounded-xl p-4 shadow-xs hover:border-[#C9A227] transition-all space-y-2"
               >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
@@ -108,13 +108,13 @@ export const SavedScreen: React.FC<SavedScreenProps> = ({
                   <div className="flex items-center gap-2">
                     <button
                       onClick={() => onNavigateToVerse(item.book, item.chapter, item.verse)}
-                      className="px-2.5 py-1 text-xs font-semibold rounded bg-[#1B3A6B] text-white hover:bg-[#10203D] flex items-center gap-1 transition-colors"
+                      className="px-2.5 py-1 text-xs font-semibold rounded bg-[#1B3A6B] text-white hover:bg-[#10203D] flex items-center gap-1 transition-colors cursor-pointer"
                     >
                       Jump to verse <ArrowRight className="w-3 h-3" />
                     </button>
                     <button
                       onClick={() => onDeleteHighlight(item.book, item.chapter, item.verse)}
-                      className="p-1 text-gray-400 hover:text-red-500 transition-colors"
+                      className="p-1 text-gray-400 hover:text-red-500 transition-colors cursor-pointer"
                       title="Delete highlight"
                     >
                       <Trash2 className="w-4 h-4" />
@@ -142,7 +142,7 @@ export const SavedScreen: React.FC<SavedScreenProps> = ({
       {activeTab === 'bookmarks' && (
         <div className="space-y-3">
           {bookmarks.length === 0 ? (
-            <div className="text-center py-16 bg-white dark:bg-[#182234] rounded-2xl border border-dashed border-gray-300 dark:border-slate-700">
+            <div className="text-center py-16 bg-white dark:bg-[#142036] rounded-2xl border border-dashed border-gray-300 dark:border-slate-700">
               <Bookmark className="w-8 h-8 text-gray-300 mx-auto mb-2" />
               <p className="font-serif text-sm italic text-gray-500">
                 No bookmarks saved yet. Click the bookmark icon on any verse toolbar.
@@ -152,7 +152,7 @@ export const SavedScreen: React.FC<SavedScreenProps> = ({
             bookmarks.map((bm) => (
               <div
                 key={bm.id}
-                className="bg-white dark:bg-[#182234] border border-[#E3DFD3] dark:border-[#2A3552] rounded-xl p-4 shadow-xs flex items-center justify-between"
+                className="bg-white dark:bg-[#142036] border border-[#E2DED2] dark:border-[#22314E] rounded-xl p-4 shadow-xs flex items-center justify-between"
               >
                 <div>
                   <h4 className="font-serif font-bold text-sm text-[#1B3A6B] dark:text-[#E4C765]">
@@ -165,13 +165,13 @@ export const SavedScreen: React.FC<SavedScreenProps> = ({
                 <div className="flex items-center gap-2">
                   <button
                     onClick={() => onNavigateToVerse(bm.book, bm.chapter, bm.verse)}
-                    className="px-3 py-1.5 text-xs font-semibold rounded-lg bg-[#1B3A6B] text-white hover:bg-[#10203D] flex items-center gap-1 transition-colors"
+                    className="px-3 py-1.5 text-xs font-semibold rounded-lg bg-[#1B3A6B] text-white hover:bg-[#10203D] flex items-center gap-1 transition-colors cursor-pointer"
                   >
                     Open <ArrowRight className="w-3 h-3" />
                   </button>
                   <button
                     onClick={() => onDeleteBookmark(bm.id)}
-                    className="p-1.5 text-gray-400 hover:text-red-500 transition-colors"
+                    className="p-1.5 text-gray-400 hover:text-red-500 transition-colors cursor-pointer"
                   >
                     <Trash2 className="w-4 h-4" />
                   </button>
@@ -185,7 +185,7 @@ export const SavedScreen: React.FC<SavedScreenProps> = ({
       {activeTab === 'notes' && (
         <div className="space-y-3">
           {notes.length === 0 ? (
-            <div className="text-center py-16 bg-white dark:bg-[#182234] rounded-2xl border border-dashed border-gray-300 dark:border-slate-700">
+            <div className="text-center py-16 bg-white dark:bg-[#142036] rounded-2xl border border-dashed border-gray-300 dark:border-slate-700">
               <Edit3 className="w-8 h-8 text-gray-300 mx-auto mb-2" />
               <p className="font-serif text-sm italic text-gray-500">
                 No study notes written yet. Select a verse and click the pencil icon to write reflections.
@@ -195,7 +195,7 @@ export const SavedScreen: React.FC<SavedScreenProps> = ({
             notes.map((note) => (
               <div
                 key={note.id}
-                className="bg-white dark:bg-[#182234] border border-[#E3DFD3] dark:border-[#2A3552] rounded-xl p-4 shadow-xs space-y-2"
+                className="bg-white dark:bg-[#142036] border border-[#E2DED2] dark:border-[#22314E] rounded-xl p-4 shadow-xs space-y-2"
               >
                 <div className="flex items-center justify-between">
                   <span className="font-serif font-bold text-sm text-[#1B3A6B] dark:text-[#E4C765]">
@@ -204,19 +204,19 @@ export const SavedScreen: React.FC<SavedScreenProps> = ({
                   <div className="flex items-center gap-2">
                     <button
                       onClick={() => onNavigateToVerse(note.book, note.chapter, note.verse)}
-                      className="px-2.5 py-1 text-xs font-semibold rounded bg-[#1B3A6B] text-white hover:bg-[#10203D] flex items-center gap-1 transition-colors"
+                      className="px-2.5 py-1 text-xs font-semibold rounded bg-[#1B3A6B] text-white hover:bg-[#10203D] flex items-center gap-1 transition-colors cursor-pointer"
                     >
                       Open in Bible <ArrowRight className="w-3 h-3" />
                     </button>
                     <button
                       onClick={() => onDeleteNote(note.id)}
-                      className="p-1 text-gray-400 hover:text-red-500 transition-colors"
+                      className="p-1 text-gray-400 hover:text-red-500 transition-colors cursor-pointer"
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>
                   </div>
                 </div>
-                <div className="p-3 bg-[#F7F5EF] dark:bg-slate-800 rounded-lg text-xs sm:text-sm text-gray-800 dark:text-gray-200 whitespace-pre-wrap">
+                <div className="p-3 bg-gray-50 dark:bg-slate-800 rounded-lg text-xs sm:text-sm text-gray-800 dark:text-gray-200 whitespace-pre-wrap">
                   {note.text}
                 </div>
               </div>

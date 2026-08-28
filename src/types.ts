@@ -106,4 +106,7 @@ export interface UserPreferences {
   readingLayout: ReadingLayout;
   showVerseNumbers: boolean;
   enableSpeechAutoplay?: boolean;
+  dailyVerseNotification?: boolean;
+  notificationTime?: string;
+  lastNotificationDate?: string;
 }

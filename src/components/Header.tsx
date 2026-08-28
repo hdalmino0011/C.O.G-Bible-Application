@@ -60,6 +60,16 @@ export const Header: React.FC<HeaderProps> = ({
             alt="COG Logo"
             className="w-full h-full object-cover"
             referrerPolicy="no-referrer"
+            onError={(e) => {
+              const target = e.currentTarget;
+              if (!target.dataset.triedJpg) {
+                target.dataset.triedJpg = 'true';
+                target.src = './logo.jpg';
+              } else if (!target.dataset.triedIcon) {
+                target.dataset.triedIcon = 'true';
+                target.src = './app-icon.png';
+              }
+            }}
           />
         </button>
 

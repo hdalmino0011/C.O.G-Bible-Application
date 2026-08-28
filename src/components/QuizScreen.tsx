@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion } from 'motion/react';
 import confetti from 'canvas-confetti';
 import { Award, Play, RotateCcw, CheckCircle2, XCircle, ArrowRight, HelpCircle, Trophy, Flame } from 'lucide-react';
 import { QUIZ_QUESTIONS } from '../data/quizQuestions';
@@ -13,8 +13,7 @@ interface QuizScreenProps {
 
 export const QuizScreen: React.FC<QuizScreenProps> = ({
   quizStats,
-  onUpdateStats,
-  onNavigateToVerse
+  onUpdateStats
 }) => {
   const [selectedCategory, setSelectedCategory] = useState<'all' | 'old' | 'new'>('all');
   const [isQuizActive, setIsQuizActive] = useState(false);
@@ -76,7 +75,6 @@ export const QuizScreen: React.FC<QuizScreenProps> = ({
       setIsAnswerSubmitted(false);
     } else {
       setIsQuizFinished(true);
-      // Trigger celebration confetti
       try {
         confetti({
           particleCount: 80,
@@ -118,14 +116,14 @@ export const QuizScreen: React.FC<QuizScreenProps> = ({
               </div>
               <h2 className="font-serif text-2xl font-bold">Bible Knowledge Challenge</h2>
               <p className="text-xs sm:text-sm text-blue-100/90 mt-1 max-w-md">
-                Test your knowledge of the Holy Scriptures, doctrines, characters, and prophecy of The Church of God.
+                Test your knowledge of the Holy Scriptures, doctrines, and foundation of The Church of God.
               </p>
             </div>
           </div>
 
           {/* Stats Bar */}
           <div className="grid grid-cols-3 gap-3">
-            <div className="bg-white dark:bg-[#182234] border border-[#E3DFD3] dark:border-[#2A3552] rounded-xl p-3.5 text-center shadow-xs">
+            <div className="bg-white dark:bg-[#142036] border border-[#E2DED2] dark:border-[#22314E] rounded-xl p-3.5 text-center shadow-xs">
               <span className="block font-serif text-2xl font-bold text-[#1B3A6B] dark:text-[#E4C765]">
                 {quizStats.total}
               </span>
@@ -134,7 +132,7 @@ export const QuizScreen: React.FC<QuizScreenProps> = ({
               </span>
             </div>
 
-            <div className="bg-white dark:bg-[#182234] border border-[#E3DFD3] dark:border-[#2A3552] rounded-xl p-3.5 text-center shadow-xs">
+            <div className="bg-white dark:bg-[#142036] border border-[#E2DED2] dark:border-[#22314E] rounded-xl p-3.5 text-center shadow-xs">
               <span className="block font-serif text-2xl font-bold text-emerald-600 dark:text-emerald-400">
                 {accuracy}%
               </span>
@@ -143,7 +141,7 @@ export const QuizScreen: React.FC<QuizScreenProps> = ({
               </span>
             </div>
 
-            <div className="bg-white dark:bg-[#182234] border border-[#E3DFD3] dark:border-[#2A3552] rounded-xl p-3.5 text-center shadow-xs">
+            <div className="bg-white dark:bg-[#142036] border border-[#E2DED2] dark:border-[#22314E] rounded-xl p-3.5 text-center shadow-xs">
               <div className="flex items-center justify-center gap-1 font-serif text-2xl font-bold text-amber-600 dark:text-amber-400">
                 <Flame className="w-5 h-5 fill-amber-500 text-amber-500" />
                 {quizStats.streak}
@@ -165,7 +163,7 @@ export const QuizScreen: React.FC<QuizScreenProps> = ({
                 className={`py-3 px-2 rounded-xl text-xs sm:text-sm font-bold border transition-all text-center ${
                   selectedCategory === 'all'
                     ? 'bg-[#1B3A6B] text-white border-[#1B3A6B] shadow-md ring-2 ring-[#C9A227]/50'
-                    : 'bg-white dark:bg-[#182234] text-gray-700 dark:text-gray-200 border-[#E3DFD3] dark:border-[#2A3552] hover:border-[#C9A227]'
+                    : 'bg-white dark:bg-[#142036] text-gray-700 dark:text-gray-200 border-[#E2DED2] dark:border-[#22314E] hover:border-[#C9A227]'
                 }`}
               >
                 All Books (66)
@@ -175,7 +173,7 @@ export const QuizScreen: React.FC<QuizScreenProps> = ({
                 className={`py-3 px-2 rounded-xl text-xs sm:text-sm font-bold border transition-all text-center ${
                   selectedCategory === 'old'
                     ? 'bg-[#1B3A6B] text-white border-[#1B3A6B] shadow-md ring-2 ring-[#C9A227]/50'
-                    : 'bg-white dark:bg-[#182234] text-gray-700 dark:text-gray-200 border-[#E3DFD3] dark:border-[#2A3552] hover:border-[#C9A227]'
+                    : 'bg-white dark:bg-[#142036] text-gray-700 dark:text-gray-200 border-[#E2DED2] dark:border-[#22314E] hover:border-[#C9A227]'
                 }`}
               >
                 Old Testament
@@ -185,7 +183,7 @@ export const QuizScreen: React.FC<QuizScreenProps> = ({
                 className={`py-3 px-2 rounded-xl text-xs sm:text-sm font-bold border transition-all text-center ${
                   selectedCategory === 'new'
                     ? 'bg-[#1B3A6B] text-white border-[#1B3A6B] shadow-md ring-2 ring-[#C9A227]/50'
-                    : 'bg-white dark:bg-[#182234] text-gray-700 dark:text-gray-200 border-[#E3DFD3] dark:border-[#2A3552] hover:border-[#C9A227]'
+                    : 'bg-white dark:bg-[#142036] text-gray-700 dark:text-gray-200 border-[#E2DED2] dark:border-[#22314E] hover:border-[#C9A227]'
                 }`}
               >
                 New Testament
@@ -193,17 +191,17 @@ export const QuizScreen: React.FC<QuizScreenProps> = ({
             </div>
           </div>
 
-          {/* Primary START Button (ONLY SHOWN IN LOBBY) */}
+          {/* Primary START Button */}
           <div className="pt-2">
             <button
               id="start-quiz-btn"
               onClick={handleStartQuiz}
-              className="w-full py-4 px-6 rounded-2xl bg-gradient-to-r from-[#1B3A6B] to-[#3E6FB0] hover:from-[#10203D] hover:to-[#1B3A6B] text-white font-serif font-bold text-base sm:text-lg flex items-center justify-center gap-2 shadow-lg hover:shadow-xl active:scale-[0.99] transition-all"
+              className="w-full py-4 px-6 rounded-2xl bg-gradient-to-r from-[#1B3A6B] to-[#3E6FB0] hover:from-[#10203D] hover:to-[#1B3A6B] text-white font-serif font-bold text-base sm:text-lg flex items-center justify-center gap-2 shadow-lg hover:shadow-xl active:scale-[0.99] transition-all cursor-pointer"
             >
               <Play className="w-5 h-5 fill-white" />
               Start Bible Quiz
             </button>
-            <p className="text-center text-xs text-gray-400 mt-2">
+            <p className="text-center text-xs text-gray-500 dark:text-gray-400 mt-2">
               Questions will appear sequentially with instant biblical scripture citations.
             </p>
           </div>
@@ -232,7 +230,7 @@ export const QuizScreen: React.FC<QuizScreenProps> = ({
 
             <button
               onClick={handleRestart}
-              className="text-xs text-gray-500 hover:text-red-500 transition-colors flex items-center gap-1"
+              className="text-xs text-gray-500 hover:text-red-500 transition-colors flex items-center gap-1 cursor-pointer"
             >
               Quit Quiz
             </button>
@@ -247,8 +245,8 @@ export const QuizScreen: React.FC<QuizScreenProps> = ({
           </div>
 
           {/* Question Card */}
-          <div className="bg-white dark:bg-[#182234] border border-[#E3DFD3] dark:border-[#2A3552] rounded-2xl p-5 sm:p-6 shadow-md">
-            <h3 className="font-serif text-lg sm:text-xl font-bold text-[#10203D] dark:text-white leading-snug mb-5">
+          <div className="bg-white dark:bg-[#142036] border border-[#E2DED2] dark:border-[#22314E] rounded-2xl p-5 sm:p-6 shadow-md">
+            <h3 className="font-serif text-lg sm:text-xl font-bold text-[#0E1B33] dark:text-white leading-snug mb-5">
               {currentQ.q}
             </h3>
 
@@ -259,13 +257,13 @@ export const QuizScreen: React.FC<QuizScreenProps> = ({
                 const isCorrect = index === currentQ.answer;
 
                 let optionStyle =
-                  'bg-[#F7F5EF] dark:bg-slate-800 border-[#E3DFD3] dark:border-slate-700 text-gray-800 dark:text-gray-100 hover:border-[#C9A227]';
+                  'bg-gray-50 dark:bg-slate-800/80 border-[#E2DED2] dark:border-[#22314E] text-gray-800 dark:text-gray-100 hover:border-[#C9A227]';
 
                 if (isAnswerSubmitted) {
                   if (isCorrect) {
-                    optionStyle = 'bg-emerald-50 dark:bg-emerald-950/50 border-emerald-500 text-emerald-800 dark:text-emerald-200 font-semibold ring-2 ring-emerald-400/40';
+                    optionStyle = 'bg-emerald-50 dark:bg-emerald-950/60 border-emerald-500 text-emerald-900 dark:text-emerald-200 font-semibold ring-2 ring-emerald-400/40';
                   } else if (isSelected && !isCorrect) {
-                    optionStyle = 'bg-rose-50 dark:bg-rose-950/50 border-rose-500 text-rose-800 dark:text-rose-200 font-semibold ring-2 ring-rose-400/40';
+                    optionStyle = 'bg-rose-50 dark:bg-rose-950/60 border-rose-500 text-rose-900 dark:text-rose-200 font-semibold ring-2 ring-rose-400/40';
                   } else {
                     optionStyle = 'opacity-50 border-gray-200 dark:border-slate-800 text-gray-400';
                   }
@@ -276,7 +274,7 @@ export const QuizScreen: React.FC<QuizScreenProps> = ({
                     key={index}
                     disabled={isAnswerSubmitted}
                     onClick={() => handleSelectOption(index)}
-                    className={`w-full text-left p-3.5 sm:p-4 rounded-xl border transition-all text-xs sm:text-sm flex items-center justify-between ${optionStyle}`}
+                    className={`w-full text-left p-3.5 sm:p-4 rounded-xl border transition-all text-xs sm:text-sm flex items-center justify-between cursor-pointer ${optionStyle}`}
                   >
                     <span>{option}</span>
                     {isAnswerSubmitted && (
@@ -317,7 +315,7 @@ export const QuizScreen: React.FC<QuizScreenProps> = ({
               <div className="mt-5 pt-4 border-t border-gray-100 dark:border-slate-700 flex justify-end">
                 <button
                   onClick={handleNextQuestion}
-                  className="py-2.5 px-6 rounded-xl bg-[#1B3A6B] hover:bg-[#10203D] text-white font-bold text-xs sm:text-sm flex items-center gap-2 shadow-md transition-all"
+                  className="py-2.5 px-6 rounded-xl bg-[#1B3A6B] hover:bg-[#10203D] text-white font-bold text-xs sm:text-sm flex items-center gap-2 shadow-md transition-all cursor-pointer"
                 >
                   {currentIndex + 1 < currentQuestions.length ? 'Next Question' : 'View Results'}
                   <ArrowRight className="w-4 h-4" />
@@ -333,14 +331,14 @@ export const QuizScreen: React.FC<QuizScreenProps> = ({
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="bg-white dark:bg-[#182234] border border-[#E3DFD3] dark:border-[#2A3552] rounded-2xl p-6 sm:p-8 text-center shadow-lg space-y-5"
+          className="bg-white dark:bg-[#142036] border border-[#E2DED2] dark:border-[#22314E] rounded-2xl p-6 sm:p-8 text-center shadow-lg space-y-5"
         >
           <div className="w-20 h-20 mx-auto rounded-full bg-[#C9A227]/20 border-2 border-[#C9A227] flex items-center justify-center">
             <Award className="w-10 h-10 text-[#C9A227]" />
           </div>
 
           <div>
-            <h2 className="font-serif text-2xl font-bold text-[#10203D] dark:text-white">
+            <h2 className="font-serif text-2xl font-bold text-[#0E1B33] dark:text-white">
               Quiz Completed!
             </h2>
             <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
@@ -348,7 +346,7 @@ export const QuizScreen: React.FC<QuizScreenProps> = ({
             </p>
           </div>
 
-          <div className="p-4 bg-[#F7F5EF] dark:bg-slate-800 rounded-xl border border-[#E3DFD3] dark:border-slate-700 max-w-sm mx-auto">
+          <div className="p-4 bg-gray-50 dark:bg-slate-800 rounded-xl border border-[#E2DED2] dark:border-slate-700 max-w-sm mx-auto">
             <div className="font-serif text-4xl font-extrabold text-[#1B3A6B] dark:text-[#E4C765]">
               {sessionCorrectCount} / {currentQuestions.length}
             </div>
@@ -360,14 +358,14 @@ export const QuizScreen: React.FC<QuizScreenProps> = ({
           <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3">
             <button
               onClick={handleStartQuiz}
-              className="w-full sm:w-auto py-3 px-6 rounded-xl bg-[#1B3A6B] hover:bg-[#10203D] text-white font-bold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-md transition-all"
+              className="w-full sm:w-auto py-3 px-6 rounded-xl bg-[#1B3A6B] hover:bg-[#10203D] text-white font-bold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-md transition-all cursor-pointer"
             >
               <RotateCcw className="w-4 h-4" />
               Try Again
             </button>
             <button
               onClick={handleRestart}
-              className="w-full sm:w-auto py-3 px-6 rounded-xl bg-gray-100 dark:bg-slate-700 hover:bg-gray-200 dark:hover:bg-slate-600 text-gray-700 dark:text-gray-200 font-bold text-xs sm:text-sm transition-all"
+              className="w-full sm:w-auto py-3 px-6 rounded-xl bg-gray-100 dark:bg-slate-700 hover:bg-gray-200 dark:hover:bg-slate-600 text-gray-700 dark:text-gray-200 font-bold text-xs sm:text-sm transition-all cursor-pointer"
             >
               Choose Another Category
             </button>

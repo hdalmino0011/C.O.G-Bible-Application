@@ -41,6 +41,16 @@ export const Splash: React.FC<SplashProps> = ({ onComplete }) => {
                 alt="COG (T.J.R) Bible Seal"
                 className="relative w-full h-full object-contain rounded-full border-2 border-[#E4C765] shadow-2xl p-2 bg-[#142748]/80"
                 referrerPolicy="no-referrer"
+                onError={(e) => {
+                  const target = e.currentTarget;
+                  if (!target.dataset.triedJpg) {
+                    target.dataset.triedJpg = 'true';
+                    target.src = './logo.jpg';
+                  } else if (!target.dataset.triedIcon) {
+                    target.dataset.triedIcon = 'true';
+                    target.src = './app-icon.png';
+                  }
+                }}
               />
             </div>
 

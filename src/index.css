@@ -2,7 +2,7 @@
 
 @layer base {
   :root {
-    --ink: #10203D;
+    --ink: #0E1B33;
     --blue-deep: #1B3A6B;
     --blue-mid: #2C548F;
     --blue-bright: #3E6FB0;
@@ -10,95 +10,189 @@
     --gold-soft: #E4C765;
     --ivory: #F7F5EF;
     --paper: #FFFFFF;
-    --slate: #33415C;
-    --slate-soft: #6B7690;
-    --line: #E3DFD3;
+    --slate: #202D42;
+    --slate-soft: #55637D;
+    --line: #E2DED2;
     --danger: #B3432B;
     --success: #2F7A54;
-    --app-font: 'Roboto', sans-serif;
+    --app-font: 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     --font-size-base: 15.5px;
   }
 
-  body {
-    font-family: var(--app-font);
+  * {
+    box-sizing: border-box;
+  }
+
+  html, body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
     background-color: var(--ivory);
     color: var(--slate);
+    font-family: var(--app-font);
     -webkit-tap-highlight-color: transparent;
     text-rendering: optimizeLegibility;
     -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 }
 
-/* Theme overrides */
+/* ================= THEME DEFINITIONS ================= */
+
+/* 1. Light Theme (Warm clean ivory, deep dark fonts) */
 body.theme-light {
   --ivory: #F7F5EF;
   --paper: #FFFFFF;
-  --slate: #33415C;
-  --slate-soft: #6B7690;
-  --line: #E3DFD3;
-  --ink: #10203D;
+  --slate: #202D42;
+  --slate-soft: #55637D;
+  --line: #E2DED2;
+  --ink: #0E1B33;
+  --gold: #B88E18;
+  --gold-soft: #E4C765;
   background-color: #F7F5EF;
-  color: #33415C;
+  color: #202D42;
 }
 
+/* 2. Dark Theme (Deep obsidian midnight, bright crisp text) */
 body.theme-dark {
-  --ivory: #101725;
-  --paper: #182234;
-  --slate: #D7DDEA;
-  --slate-soft: #8B96AC;
-  --line: #2A3552;
-  --ink: #EDEFF5;
-  background-color: #101725;
-  color: #EDEFF5;
+  --ivory: #0B1324;
+  --paper: #142036;
+  --slate: #E2E8F0;
+  --slate-soft: #94A3B8;
+  --line: #22314E;
+  --ink: #FFFFFF;
+  --gold: #F3DE8A;
+  --gold-soft: #FDE68A;
+  background-color: #0B1324;
+  color: #E2E8F0;
 }
 
+/* 3. Sepia Theme (Warm book parchment, dark cocoa text) */
 body.theme-sepia {
-  --ivory: #F4ECD8;
-  --paper: #F9F2E0;
+  --ivory: #F5EEDB;
+  --paper: #FAF4E6;
   --slate: #3D2B1F;
-  --slate-soft: #6B5B4A;
-  --line: #D4C5A0;
-  --ink: #2C1F14;
-  background-color: #F4ECD8;
+  --slate-soft: #6E5643;
+  --line: #D9CBB0;
+  --ink: #23160D;
+  --gold: #B8860B;
+  --gold-soft: #D4AF37;
+  background-color: #F5EEDB;
   color: #3D2B1F;
 }
 
+/* 4. Navy Blue Theme (Midnight navy, luminous text) */
 body.theme-blue {
-  --ivory: #E8F0FE;
-  --paper: #D4E4F7;
-  --slate: #1A365D;
-  --slate-soft: #2B4C7E;
-  --line: #B0C8E0;
-  --ink: #0D2137;
-  background-color: #E8F0FE;
-  color: #1A365D;
+  --ivory: #081426;
+  --paper: #10243E;
+  --slate: #E2ECFA;
+  --slate-soft: #8EAAD4;
+  --line: #203A63;
+  --ink: #FFFFFF;
+  --gold: #F4C430;
+  --gold-soft: #FDE047;
+  background-color: #081426;
+  color: #E2ECFA;
 }
 
-/* Keep utility-class text readable when dark mode is selected. */
+/* ================= DARK & NAVY THEME READABILITY OVERRIDES ================= */
+
 body.theme-dark [class~="text-[#10203D]"],
 body.theme-dark [class~="text-[#1B3A6B]"],
 body.theme-dark [class~="text-[#33415C]"],
-body.theme-dark [class~="text-gray-500"],
+body.theme-dark [class~="text-gray-900"],
+body.theme-dark [class~="text-gray-800"],
+body.theme-dark [class~="text-gray-700"] {
+  color: #FFFFFF !important;
+}
+
 body.theme-dark [class~="text-gray-600"],
-body.theme-dark [class~="text-gray-700"],
-body.theme-dark [class~="text-gray-800"] {
-  color: var(--slate) !important;
+body.theme-dark [class~="text-gray-500"],
+body.theme-dark [class~="text-[#6B7690]"] {
+  color: #94A3B8 !important;
 }
 
 body.theme-dark [class~="text-gray-400"] {
-  color: var(--slate-soft) !important;
+  color: #CBD5E1 !important;
 }
 
-body.theme-dark [class~="bg-white"] {
+body.theme-dark [class~="bg-white"],
+body.theme-dark [class~="bg-[#F7F5EF]"] {
   background-color: var(--paper) !important;
 }
 
+body.theme-dark [class~="border-[#E3DFD3]"],
 body.theme-dark [class~="border-gray-100"],
-body.theme-dark [class~="border-gray-200"] {
+body.theme-dark [class~="border-gray-200"],
+body.theme-dark [class~="border-gray-300"] {
   border-color: var(--line) !important;
 }
 
-/* Avoid tiny, low-contrast labels across all themes and font choices. */
+body.theme-dark select,
+body.theme-dark input,
+body.theme-dark textarea {
+  background-color: var(--paper) !important;
+  color: #FFFFFF !important;
+  border-color: var(--line) !important;
+}
+
+/* Navy Blue Overrides */
+body.theme-blue [class~="text-[#10203D]"],
+body.theme-blue [class~="text-[#1B3A6B]"],
+body.theme-blue [class~="text-[#33415C]"],
+body.theme-blue [class~="text-gray-900"],
+body.theme-blue [class~="text-gray-800"],
+body.theme-blue [class~="text-gray-700"] {
+  color: #FFFFFF !important;
+}
+
+body.theme-blue [class~="text-gray-600"],
+body.theme-blue [class~="text-gray-500"],
+body.theme-blue [class~="text-[#6B7690]"] {
+  color: #8EAAD4 !important;
+}
+
+body.theme-blue [class~="text-gray-400"] {
+  color: #BAD1F3 !important;
+}
+
+body.theme-blue [class~="bg-white"],
+body.theme-blue [class~="bg-[#F7F5EF]"] {
+  background-color: var(--paper) !important;
+}
+
+body.theme-blue [class~="border-[#E3DFD3]"],
+body.theme-blue [class~="border-gray-100"],
+body.theme-blue [class~="border-gray-200"],
+body.theme-blue [class~="border-gray-300"] {
+  border-color: var(--line) !important;
+}
+
+body.theme-blue select,
+body.theme-blue input,
+body.theme-blue textarea {
+  background-color: var(--paper) !important;
+  color: #FFFFFF !important;
+  border-color: var(--line) !important;
+}
+
+/* Sepia Overrides */
+body.theme-sepia [class~="text-[#10203D]"],
+body.theme-sepia [class~="text-[#1B3A6B]"],
+body.theme-sepia [class~="text-[#33415C]"] {
+  color: #23160D !important;
+}
+
+body.theme-sepia [class~="bg-white"],
+body.theme-sepia [class~="bg-[#F7F5EF]"] {
+  background-color: var(--paper) !important;
+}
+
+body.theme-sepia [class~="border-[#E3DFD3]"] {
+  border-color: var(--line) !important;
+}
+
+/* Base form controls */
 button,
 input,
 select,
@@ -113,11 +207,11 @@ label {
 
 /* Font family variations */
 body.font-Roboto {
-  --app-font: 'Roboto', sans-serif;
+  --app-font: 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
 
 body.font-Playfair {
-  --app-font: 'Playfair Display', serif;
+  --app-font: 'Playfair Display', Georgia, serif;
 }
 
 body.font-Georgia {
@@ -178,40 +272,40 @@ body.size-xxlarge {
 }
 
 .verse-row:hover {
-  background: rgba(201, 162, 39, 0.06);
+  background: rgba(201, 162, 39, 0.08);
 }
 
 .verse-row.selected {
   outline: 2px solid var(--gold);
   outline-offset: -2px;
-  background: rgba(201, 162, 39, 0.12) !important;
+  background: rgba(201, 162, 39, 0.16) !important;
   border-radius: 4px;
 }
 
 /* Highlight colors */
 .verse-row.highlight-yellow {
-  background-color: #FFD700 !important;
-  color: #10203D !important;
+  background-color: #FACC15 !important;
+  color: #0E1B33 !important;
 }
 
 .verse-row.highlight-pink {
-  background-color: #FFB6C1 !important;
-  color: #10203D !important;
+  background-color: #F472B6 !important;
+  color: #0E1B33 !important;
 }
 
 .verse-row.highlight-green {
-  background-color: #98FB98 !important;
-  color: #10203D !important;
+  background-color: #4ADE80 !important;
+  color: #0E1B33 !important;
 }
 
 .verse-row.highlight-blue {
-  background-color: #87CEEB !important;
-  color: #10203D !important;
+  background-color: #60A5FA !important;
+  color: #0E1B33 !important;
 }
 
 .verse-row.highlight-purple {
-  background-color: #D8BFD8 !important;
-  color: #10203D !important;
+  background-color: #C084FC !important;
+  color: #0E1B33 !important;
 }
 
 /* Verse cell elements */

@@ -273,28 +273,36 @@ export const DICTIONARY_DATA: DictionaryEntry[] = [
     id: 'church-of-god',
     term: 'The Church of God',
     category: 'Doctrine',
-    shortDefinition: 'The biblical name and body of Christ, founded upon the apostles and prophets with Jesus Christ as the chief cornerstone.',
+    shortDefinition: 'The true Church founded by Jesus Christ, purchased with His own blood, and declared in Holy Scripture to be the pillar and ground of the truth.',
     origin: 'Greek (Ἐκκλησία τοῦ Θεοῦ, Ekklesia tou Theou)',
-    references: 'Acts 20:28, 1 Corinthians 1:2, 1 Corinthians 10:32, 1 Timothy 3:15',
+    references: 'Matthew 16:18, Acts 20:28, 1 Timothy 3:15, 1 Corinthians 1:2, Ephesians 2:20',
     article: {
       sections: [
         {
-          heading: 'Biblical Name & Pillar of Truth',
-          content: 'Scripture specifically names the body of believers as "The Church of God" (Acts 20:28, 1 Corinthians 1:2, Galatians 1:13). In 1 Timothy 3:15, Paul declares it to be "the house of God, which is the church of the living God, the pillar and ground of the truth."'
+          heading: 'The True Church Founded by Jesus Christ',
+          content: 'The Church of God is the true Church established personally by our Lord Jesus Christ during His earthly ministry (Matthew 16:18: "Upon this rock I will build my church; and the gates of hell shall not prevail against it"). It is not a human institution or denomination invented by mortal men, but the true spiritual body of Christ purchased by His own precious blood (Acts 20:28).'
         },
         {
-          heading: 'Truth, Justice, and Righteousness',
-          content: 'The Church of God stands uncompromisingly on the Word of God, upholding sound doctrine, divine justice, holiness, and righteous living in accordance with the Holy Scriptures.'
+          heading: 'Biblical Name & Pillar of Truth',
+          content: 'Scripture divinely identifies the true body of believers by its authentic biblical name, "The Church of God" (Acts 20:28, 1 Corinthians 1:2, 1 Corinthians 10:32, 1 Corinthians 11:22, Galatians 1:13). In 1 Timothy 3:15, the Apostle Paul declares it to be "the house of God, which is the church of the living God, the pillar and ground of the truth."'
+        },
+        {
+          heading: 'Apostolic Foundation & Sound Doctrine',
+          content: 'The true Church is built upon the foundation of the apostles and prophets, with Jesus Christ Himself as the chief cornerstone (Ephesians 2:20). It faithfully upholds the unadulterated Word of God, teaching the commandments of God, the testimony and faith of Jesus (Revelation 14:12), and the pillars of Truth, Justice, and Righteousness.'
         }
       ],
       bibleReferences: [
+        'Matthew 16:18',
         'Acts 20:28',
+        '1 Timothy 3:15',
         '1 Corinthians 1:2',
+        '1 Corinthians 10:32',
         '1 Corinthians 11:22',
         '1 Corinthians 15:9',
+        'Ephesians 2:20',
+        'Ephesians 5:25-27',
         'Galatians 1:13',
-        '1 Timothy 3:15',
-        'Ephesians 5:29'
+        'Revelation 14:12'
       ]
     }
   },
