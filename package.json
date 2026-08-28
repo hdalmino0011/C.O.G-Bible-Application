@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite --port=3000 --host=0.0.0.0",
-    "build": "vite build && node -e \"const fs = require('fs'); fs.rmSync('./docs', {recursive: true, force: true}); fs.cpSync('./dist', './docs', {recursive: true}); fs.rmSync('./assets', {recursive: true, force: true}); fs.cpSync('./dist/assets', './assets', {recursive: true});\"",
+    "build": "vite build && node --input-type=commonjs -e "const fs = require('fs'); fs.rmSync('./docs', {recursive: true, force: true}); fs.cpSync('./dist', './docs', {recursive: true}); fs.rmSync('./assets', {recursive: true, force: true}); fs.cpSync('./dist/assets', './assets', {recursive: true});"",
     "predeploy": "npm run build",
     "deploy": "gh-pages -d dist",
     "preview": "vite preview",
@@ -29,8 +29,6 @@
   "devDependencies": {
     "@types/express": "^4.17.21",
     "@types/node": "^22.14.0",
-    "@types/react": "^19.2.18",
-    "@types/react-dom": "^19.2.5",
     "autoprefixer": "^10.4.21",
     "esbuild": "^0.25.0",
     "gh-pages": "^6.3.0",
