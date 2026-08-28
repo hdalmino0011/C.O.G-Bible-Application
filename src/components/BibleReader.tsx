@@ -48,8 +48,8 @@ export const BibleReader: React.FC<BibleReaderProps> = ({
 
   // Auto scroll to target verse if requested
   useEffect(() => {
-    if (targetVerseToScroll && containerRef.current) {
-      setTimeout(() => {
+    if (targetVerseToScroll && chapterVerses.length > 0 && containerRef.current) {
+      const timer = setTimeout(() => {
         const el = document.getElementById(`verse-row-${targetVerseToScroll}`);
         if (el) {
           el.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -58,9 +58,10 @@ export const BibleReader: React.FC<BibleReaderProps> = ({
             el.classList.remove('bg-[#C9A227]/20');
           }, 2500);
         }
-      }, 200);
+      }, 150);
+      return () => clearTimeout(timer);
     }
-  }, [targetVerseToScroll, currentBook, currentChapter]);
+  }, [targetVerseToScroll, currentBook, currentChapter, chapterVerses.length]);
 
   const handlePrevChapter = () => {
     if (currentChapter > 1) {

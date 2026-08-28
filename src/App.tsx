@@ -48,6 +48,8 @@ import {
 } from './utils/storage';
 
 import { BIBLE_BOOKS, normalizeBookName } from './data/books';
+import { getRandomDailyVerse } from './data/dailyVerses';
+import { sendDailyVerseNotification } from './utils/notifications';
 
 export default function App() {
   const [showSplash, setShowSplash] = useState(true);
@@ -320,6 +322,39 @@ export default function App() {
     };
   }, []);
 
+  // Daily notification scheduled trigger
+  useEffect(() => {
+    if (!preferences.dailyVerseNotification || typeof window === 'undefined') return;
+
+    const checkAndTriggerDailyVerse = () => {
+      try {
+        const lastSentKey = 'cog_daily_verse_last_date';
+        const todayStr = new Date().toDateString();
+        const lastSentDate = localStorage.getItem(lastSentKey);
+
+        if (lastSentDate !== todayStr && 'Notification' in window && Notification.permission === 'granted') {
+          const verse = getRandomDailyVerse(bibleData);
+          sendDailyVerseNotification(verse, `📖 Daily Verse: ${verse.book} ${verse.chapter}:${verse.verse}`).then(sent => {
+            if (sent) {
+              localStorage.setItem(lastSentKey, todayStr);
+            }
+          });
+        }
+      } catch (err) {
+        console.error('Error checking daily verse notification', err);
+      }
+    };
+
+    // Check on startup after a short delay
+    const initialTimer = setTimeout(checkAndTriggerDailyVerse, 4000);
+    const intervalTimer = setInterval(checkAndTriggerDailyVerse, 60000 * 30); // check every 30 mins
+
+    return () => {
+      clearTimeout(initialTimer);
+      clearInterval(intervalTimer);
+    };
+  }, [preferences.dailyVerseNotification, preferences.notificationTime, bibleData]);
+
   // Preference updates
   const handleUpdatePreferences = (updated: Partial<UserPreferences>) => {
     const newPrefs = { ...preferences, ...updated };
@@ -553,6 +588,8 @@ export default function App() {
           <SettingsScreen
             preferences={preferences}
             onUpdatePreferences={handleUpdatePreferences}
+            bibleData={bibleData}
+            onShowToast={showToast}
           />
         )}
       </main>

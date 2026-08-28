@@ -2,7 +2,7 @@
   "name": "COG (T.J.R) Bible",
   "short_name": "COG Bible",
   "id": "./",
-  "description": "The Church of God (Truth, Justice, and Righteousness) Bible App",
+  "description": "The Church of God (Truth, Justice, and Righteousness) Bible App featuring Cebuano (Bugna) & English (KJV) parallel text, Bible Quiz, Dictionary, and customizable reading settings.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",

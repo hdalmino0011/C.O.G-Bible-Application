@@ -1,18 +1,20 @@
 import React, { useState } from 'react';
 import { Sun, Moon, BookOpen, Droplets, Type, TextQuote, BellRing, Sparkles, Smartphone } from 'lucide-react';
-import { AppTheme, FontFamily, FontSize, UserPreferences } from '../types';
+import { AppTheme, BibleData, FontFamily, FontSize, UserPreferences } from '../types';
 import { getNotificationPermissionStatus, requestNotificationPermission, sendDailyVerseNotification, isNotificationSupported } from '../utils/notifications';
-import { getTodayVerse } from '../data/dailyVerses';
+import { getRandomDailyVerse } from '../data/dailyVerses';
 
 interface SettingsScreenProps {
   preferences: UserPreferences;
   onUpdatePreferences: (updated: Partial<UserPreferences>) => void;
+  bibleData?: BibleData;
   onShowToast?: (msg: string) => void;
 }
 
 export const SettingsScreen: React.FC<SettingsScreenProps> = ({
   preferences,
   onUpdatePreferences,
+  bibleData,
   onShowToast
 }) => {
   const [isTestingNotification, setIsTestingNotification] = useState(false);
@@ -68,12 +70,15 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
 
   const handleTestNotification = async () => {
     setIsTestingNotification(true);
-    const today = getTodayVerse();
-    const success = await sendDailyVerseNotification(today, `📖 Daily Verse: ${today.book} ${today.chapter}:${today.verse}`);
+    const randomVerse = getRandomDailyVerse(bibleData);
+    const success = await sendDailyVerseNotification(
+      randomVerse,
+      `📖 Daily Verse: ${randomVerse.book} ${randomVerse.chapter}:${randomVerse.verse}`
+    );
     setPermStatus(getNotificationPermissionStatus());
     setIsTestingNotification(false);
     if (success) {
-      onShowToast?.('Sent test notification to your device!');
+      onShowToast?.(`Sent notification for ${randomVerse.book} ${randomVerse.chapter}:${randomVerse.verse}!`);
     } else {
       onShowToast?.('Could not send notification. Please allow notifications for this app.');
     }
