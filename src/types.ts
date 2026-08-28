@@ -2,7 +2,7 @@ export type ScreenType = 'bible' | 'quiz' | 'dictionary' | 'bookmarks' | 'settin
 
 export type ReadingLayout = 'parallel' | 'cebuano' | 'english';
 
-export type AppTheme = 'light' | 'dark' | 'sepia' | 'blue';
+export type AppTheme = 'light' | 'dark' | 'blue';
 
 export type FontFamily = 'Roboto' | 'Playfair' | 'Georgia' | 'Arial' | 'Times';
 

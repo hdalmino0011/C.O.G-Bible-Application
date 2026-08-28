@@ -73,6 +73,14 @@ export async function sendDailyVerseNotification(
     n.onclick = () => {
       window.focus();
       n.close();
+      if (typeof window !== 'undefined') {
+        window.location.hash = `bible?book=${encodeURIComponent(v.book)}&chapter=${v.chapter}&verse=${v.verse}`;
+        window.dispatchEvent(
+          new CustomEvent('cog-navigate-verse', {
+            detail: { book: v.book, chapter: v.chapter, verse: v.verse }
+          })
+        );
+      }
     };
     return true;
   } catch (e) {

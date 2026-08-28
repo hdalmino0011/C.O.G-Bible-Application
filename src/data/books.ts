@@ -109,6 +109,8 @@ const BOOK_ALIASES: Record<string, string> = {
   // Revelation / Bugna
   'bugna': 'Revelation',
   'ang bugna': 'Revelation',
+  'gipadayag': 'Revelation',
+  'ang gipadayag': 'Revelation',
   'revelation': 'Revelation',
   'revelations': 'Revelation',
   'rev': 'Revelation',

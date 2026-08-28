@@ -77,7 +77,7 @@ export const DictionaryScreen: React.FC<DictionaryScreenProps> = ({ onNavigateTo
                     Origin: {activeArticle.origin}
                   </span>
                 </div>
-                <h2 className="font-serif text-2xl sm:text-3xl font-bold text-[#0E1B33] dark:text-white">
+                <h2 className="font-serif text-2xl sm:text-3xl font-bold" style={{ color: 'var(--ink)' }}>
                   {activeArticle.term}
                 </h2>
                 <p className="text-sm italic text-gray-600 dark:text-gray-300 mt-2 border-l-2 border-[#C9A227] pl-3">

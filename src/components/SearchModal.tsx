@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { motion } from 'motion/react';
-import { Search, X, BookOpen, ArrowRight, Sparkles } from 'lucide-react';
-import { normalizeBookName } from '../data/books';
+import { Search, X, BookOpen, ArrowRight, Sparkles, BookMarked } from 'lucide-react';
+import { normalizeBookName, BIBLE_BOOKS, getBookInfo } from '../data/books';
 import { BibleData } from '../types';
 
 interface SearchModalProps {
@@ -29,11 +29,32 @@ export const SearchModal: React.FC<SearchModalProps> = ({
 }) => {
   const [query, setQuery] = useState('');
 
+  // 1. Direct Book Match for English or Cebuano names (e.g. "Bugna", "Revelation", "Salmo", "Genesis")
+  const matchedBooks = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    if (!q || q.length < 2) return [];
+
+    const norm = normalizeBookName(q);
+    if (norm) {
+      const info = getBookInfo(norm);
+      if (info) return [info];
+    }
+
+    // Partial book name match
+    return BIBLE_BOOKS.filter(b =>
+      b.name.toLowerCase().includes(q) ||
+      b.cebName.toLowerCase().includes(q) ||
+      b.name.toLowerCase().replace(/\s+/g, '').includes(q.replace(/\s+/g, '')) ||
+      b.cebName.toLowerCase().replace(/\s+/g, '').includes(q.replace(/\s+/g, ''))
+    ).slice(0, 3);
+  }, [query]);
+
+  // 2. Reference & Full-Text Search Results
   const searchResults = useMemo(() => {
     const q = query.trim().toLowerCase();
     if (!q || q.length < 2) return [];
 
-    // Check Reference pattern: "John 3:16", "Bugna 1:5", "Salmo 23:1", "1 Timoteo 3:15", "Mga Buhat 2:38"
+    // Check Reference pattern: "John 3:16", "Bugna 1:5", "Salmo 23:1", "1 Timoteo 3:15", "Mga Buhat 2:38", "Bugna 1"
     const refMatch = q.match(/^(\d?\s*[a-zA-ZÀ-ÿ\s-]+?)\s+(\d+)(?::(\d+))?$/i);
     if (refMatch) {
       const parsedBook = refMatch[1].trim();
@@ -41,20 +62,26 @@ export const SearchModal: React.FC<SearchModalProps> = ({
       const chapter = parseInt(refMatch[2], 10);
       const verse = refMatch[3] ? parseInt(refMatch[3], 10) : undefined;
 
-      if (bookName && bibleData[bookName]?.[chapter]) {
-        const verseItem = verse ? bibleData[bookName][chapter].find(v => v.v === verse) : undefined;
+      if (bookName) {
+        const bookInfo = getBookInfo(bookName);
+        const maxCh = bookInfo?.chapters || 150;
+        const validChapter = Math.min(Math.max(1, chapter), maxCh);
+        const verseItem = verse && bibleData[bookName]?.[validChapter]
+          ? bibleData[bookName][validChapter].find(v => v.v === verse)
+          : undefined;
+
         return [{
           book: bookName,
-          chapter,
+          chapter: validChapter,
           verse: verse || 1,
           isDirectRef: true,
-          ceb: verseItem?.ceb || `Ablihi ang ${bookName} Kapitulo ${chapter}`,
-          en: verseItem?.en || `Jump to ${bookName} Chapter ${chapter}`
+          ceb: verseItem?.ceb || `Ablihi ang ${bookInfo?.cebName || bookName} Kapitulo ${validChapter}`,
+          en: verseItem?.en || `Jump to ${bookName} Chapter ${validChapter}`
         }];
       }
     }
 
-    // Full text search
+    // Full text keyword search across all books in memory
     const results: Array<{ book: string; chapter: number; verse: number; ceb: string; en: string }> = [];
     const books = Object.keys(bibleData);
 
@@ -122,7 +149,7 @@ export const SearchModal: React.FC<SearchModalProps> = ({
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search reference (e.g. Bugna 1:5, John 3:16) or keywords..."
+            placeholder="Type book (e.g. Bugna, Revelation) or ref (e.g. John 3:16)..."
             className="w-full text-sm sm:text-base bg-transparent text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none"
             autoFocus
           />
@@ -145,14 +172,73 @@ export const SearchModal: React.FC<SearchModalProps> = ({
           </button>
         </div>
 
-        {/* Search Suggestions or Results */}
+        {/* Search Suggestions, Matched Books, and Results */}
         <div className="flex-1 overflow-y-auto p-4 space-y-3">
+          {/* Matched Books Cards */}
+          {matchedBooks.length > 0 && (
+            <div className="space-y-2 pb-2">
+              <h4 className="text-[11px] font-bold uppercase tracking-wider text-[#C9A227] flex items-center gap-1.5">
+                <BookMarked className="w-3.5 h-3.5" />
+                Book Navigation (English &amp; Cebuano)
+              </h4>
+              <div className="grid grid-cols-1 gap-2">
+                {matchedBooks.map((b) => (
+                  <div
+                    key={b.name}
+                    className="p-3.5 rounded-xl border-2 border-[#C9A227]/40 bg-[#C9A227]/5 dark:bg-[#C9A227]/10 flex flex-col gap-2"
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-baseline gap-2">
+                        <span className="font-serif font-bold text-base text-[#0E1B33] dark:text-[#E4C765]">
+                          {b.name}
+                        </span>
+                        <span className="text-sm font-semibold text-gray-600 dark:text-gray-300">
+                          ({b.cebName})
+                        </span>
+                      </div>
+                      <span className="text-[11px] font-medium px-2 py-0.5 rounded-full bg-[#0E1B33]/10 dark:bg-white/10 text-gray-600 dark:text-gray-300">
+                        {b.testament} • {b.chapters} Chapters
+                      </span>
+                    </div>
+
+                    {/* Quick chapter jump buttons */}
+                    <div className="flex items-center gap-1.5 flex-wrap pt-1">
+                      <button
+                        onClick={() => handleSelect(b.name, 1, 1)}
+                        className="px-3 py-1 bg-[#C9A227] hover:bg-[#B38F1E] text-white font-bold text-xs rounded-lg transition-colors flex items-center gap-1 shadow-xs"
+                      >
+                        Read Chapter 1 <ArrowRight className="w-3.5 h-3.5" />
+                      </button>
+                      {Array.from({ length: Math.min(10, b.chapters) }, (_, idx) => idx + 1).map((chNum) => (
+                        <button
+                          key={chNum}
+                          onClick={() => handleSelect(b.name, chNum, 1)}
+                          className="px-2.5 py-1 rounded-lg border border-[#C9A227]/30 hover:border-[#C9A227] hover:bg-white dark:hover:bg-slate-800 text-xs font-semibold text-gray-800 dark:text-gray-200 transition-colors"
+                        >
+                          Ch {chNum}
+                        </button>
+                      ))}
+                      {b.chapters > 10 && (
+                        <button
+                          onClick={() => handleSelect(b.name, b.chapters, 1)}
+                          className="px-2 py-1 text-xs text-gray-500 hover:text-[#C9A227] font-semibold"
+                        >
+                          ...to Ch {b.chapters}
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           {!query ? (
             <div className="space-y-4">
               <div className="text-center text-gray-500 dark:text-gray-400 py-3 space-y-1">
                 <BookOpen className="w-7 h-7 mx-auto text-[#C9A227]" />
                 <p className="text-xs sm:text-sm font-serif">
-                  Type a scripture reference or keyword in Cebuano or English
+                  Type a book name (e.g. <strong>Bugna</strong>, <strong>Revelation</strong>, <strong>Salmo</strong>) or verse reference
                 </p>
               </div>
 
@@ -185,9 +271,9 @@ export const SearchModal: React.FC<SearchModalProps> = ({
                 </div>
               </div>
             </div>
-          ) : searchResults.length === 0 ? (
+          ) : searchResults.length === 0 && matchedBooks.length === 0 ? (
             <div className="py-12 text-center text-gray-400">
-              <p className="text-sm font-serif italic">No scriptures found for "{query}".</p>
+              <p className="text-sm font-serif italic">No scriptures or books found for "{query}".</p>
             </div>
           ) : (
             searchResults.map((res, i) => (

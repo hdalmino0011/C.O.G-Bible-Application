@@ -75,3 +75,36 @@ self.addEventListener('fetch', (event) => {
     })
   );
 });
+
+// Notification click event: focus app window and navigate to the bible verse
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  const data = event.notification.data || {};
+  const book = data.book || 'Genesis';
+  const chapter = data.chapter || 1;
+  const verse = data.verse || 1;
+  const targetUrl = `./#bible?book=${encodeURIComponent(book)}&chapter=${chapter}&verse=${verse}`;
+
+  event.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
+      for (const client of clientList) {
+        if ('focus' in client) {
+          client.postMessage({
+            type: 'NAVIGATE_TO_VERSE',
+            book: book,
+            chapter: chapter,
+            verse: verse
+          });
+          if (client.navigate) {
+            client.navigate(targetUrl);
+          }
+          return client.focus();
+        }
+      }
+      if (clients.openWindow) {
+        return clients.openWindow(targetUrl);
+      }
+    })
+  );
+});
+

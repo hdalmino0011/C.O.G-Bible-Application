@@ -72,8 +72,8 @@ const STATIC_ASSETS = [
   "./data/Titus.json",
   "./data/Zechariah.json",
   "./data/Zephaniah.json",
-  "./assets/index-BT6AOpcB.js",
-  "./assets/index-XeUWDAj5.css",
+  "./assets/index-BeBEc71m.css",
+  "./assets/index-BvburaeX.js",
   "./assets/logo-Jne2Ro8f.png",
   "./assets/manifest-DkOziRcA.json"
 ];

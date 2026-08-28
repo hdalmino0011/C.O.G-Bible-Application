@@ -105,7 +105,20 @@ export default function App() {
     try {
       const res = await fetch(getBookDataUrl(bookName));
       if (!res.ok) throw new Error(`Status ${res.status}`);
-      const bookContent = await res.json();
+      const rawText = await res.text();
+      let bookContent: any;
+      try {
+        bookContent = JSON.parse(rawText);
+      } catch (parseErr) {
+        // Fallback sanitize for control characters in malformed/corrupted streams
+        const sanitized = rawText.replace(/[\u0000-\u001F\u007F-\u009F]/g, (char) => {
+          if (char === '\n') return '\\n';
+          if (char === '\r') return '\\r';
+          if (char === '\t') return '\\t';
+          return '';
+        });
+        bookContent = JSON.parse(sanitized);
+      }
       setBibleData(prev => ({ ...prev, [bookName]: bookContent }));
       return bookContent;
     } catch (err) {
@@ -153,10 +166,10 @@ export default function App() {
   useEffect(() => {
     const body = document.body;
     body.className = `theme-${preferences.theme} font-${preferences.font} size-${preferences.fontSize}`;
-    if (preferences.theme === 'dark') {
-      document.documentElement.classList.add('dark');
-    } else {
+    if (preferences.theme === 'light') {
       document.documentElement.classList.remove('dark');
+    } else {
+      document.documentElement.classList.add('dark');
     }
   }, [preferences]);
 
@@ -243,6 +256,53 @@ export default function App() {
     const verse = match[3] ? parseInt(match[3], 10) : undefined;
     handleNavigateToVerse(bookName, chapter, verse);
   };
+
+  // Notification routing listeners (Service Worker postMessage, CustomEvent, and URL hash)
+  useEffect(() => {
+    const parseAndRouteHash = () => {
+      const hash = window.location.hash;
+      if (!hash) return;
+      const match = hash.match(/book=([^&]+)(?:&chapter=(\d+))?(?:&verse=(\d+))?/i);
+      if (match) {
+        const book = decodeURIComponent(match[1]);
+        const chapter = match[2] ? parseInt(match[2], 10) : 1;
+        const verse = match[3] ? parseInt(match[3], 10) : undefined;
+        handleNavigateToVerse(book, chapter, verse);
+      }
+    };
+
+    parseAndRouteHash();
+    window.addEventListener('hashchange', parseAndRouteHash);
+
+    // CustomEvent from desktop notifications
+    const handleCustomNav = (e: Event) => {
+      const customEvent = e as CustomEvent<{ book: string; chapter: number; verse?: number }>;
+      if (customEvent.detail) {
+        const { book, chapter, verse } = customEvent.detail;
+        handleNavigateToVerse(book, chapter, verse);
+      }
+    };
+    window.addEventListener('cog-navigate-verse', handleCustomNav);
+
+    // Service Worker message event (mobile notification tap)
+    const handleSWMessage = (event: MessageEvent) => {
+      if (event.data && event.data.type === 'NAVIGATE_TO_VERSE') {
+        const { book, chapter, verse } = event.data;
+        handleNavigateToVerse(book, chapter, verse);
+      }
+    };
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.addEventListener('message', handleSWMessage);
+    }
+
+    return () => {
+      window.removeEventListener('hashchange', parseAndRouteHash);
+      window.removeEventListener('cog-navigate-verse', handleCustomNav);
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.removeEventListener('message', handleSWMessage);
+      }
+    };
+  }, []);
 
   // Preference updates
   const handleUpdatePreferences = (updated: Partial<UserPreferences>) => {

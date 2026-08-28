@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@custom-variant dark (&:where(.dark, .dark *));
 
 @layer base {
   :root {
@@ -39,157 +40,66 @@
 
 /* ================= THEME DEFINITIONS ================= */
 
-/* 1. Light Theme (Warm clean ivory, deep dark fonts) */
+/* 1. Light Theme (Daylight high-contrast, pure crisp readability) */
 body.theme-light {
-  --ivory: #F7F5EF;
+  --ivory: #F8FAFC;
   --paper: #FFFFFF;
-  --slate: #202D42;
-  --slate-soft: #55637D;
-  --line: #E2DED2;
-  --ink: #0E1B33;
-  --gold: #B88E18;
-  --gold-soft: #E4C765;
-  background-color: #F7F5EF;
-  color: #202D42;
+  --slate: #1E293B;
+  --slate-soft: #475569;
+  --line: #E2E8F0;
+  --ink: #0F172A;
+  --gold: #C9A227;
+  --gold-soft: #EAB308;
+  background-color: #F8FAFC;
+  color: #1E293B;
 }
 
-/* 2. Dark Theme (Deep obsidian midnight, bright crisp text) */
+/* 2. Dark Theme (Neutral obsidian charcoal & graphite slate) */
 body.theme-dark {
-  --ivory: #0B1324;
-  --paper: #142036;
-  --slate: #E2E8F0;
-  --slate-soft: #94A3B8;
-  --line: #22314E;
+  --ivory: #121316;
+  --paper: #1C1D22;
+  --slate: #F4F4F5;
+  --slate-soft: #A1A1AA;
+  --line: #2E3038;
   --ink: #FFFFFF;
-  --gold: #F3DE8A;
+  --gold: #FBBF24;
   --gold-soft: #FDE68A;
-  background-color: #0B1324;
-  color: #E2E8F0;
+  background-color: #121316;
+  color: #F4F4F5;
 }
 
-/* 3. Sepia Theme (Warm book parchment, dark cocoa text) */
-body.theme-sepia {
-  --ivory: #F5EEDB;
-  --paper: #FAF4E6;
-  --slate: #3D2B1F;
-  --slate-soft: #6E5643;
-  --line: #D9CBB0;
-  --ink: #23160D;
-  --gold: #B8860B;
-  --gold-soft: #D4AF37;
-  background-color: #F5EEDB;
-  color: #3D2B1F;
-}
-
-/* 4. Navy Blue Theme (Midnight navy, luminous text) */
+/* 3. Navy Blue Theme (Signature Church of God Midnight Navy) */
 body.theme-blue {
-  --ivory: #081426;
-  --paper: #10243E;
+  --ivory: #071326;
+  --paper: #0E2240;
   --slate: #E2ECFA;
   --slate-soft: #8EAAD4;
-  --line: #203A63;
+  --line: #1D3D6F;
   --ink: #FFFFFF;
-  --gold: #F4C430;
+  --gold: #F59E0B;
   --gold-soft: #FDE047;
-  background-color: #081426;
+  background-color: #071326;
   color: #E2ECFA;
 }
 
-/* ================= DARK & NAVY THEME READABILITY OVERRIDES ================= */
-
-body.theme-dark [class~="text-[#10203D]"],
-body.theme-dark [class~="text-[#1B3A6B]"],
-body.theme-dark [class~="text-[#33415C]"],
-body.theme-dark [class~="text-gray-900"],
-body.theme-dark [class~="text-gray-800"],
-body.theme-dark [class~="text-gray-700"] {
-  color: #FFFFFF !important;
-}
-
-body.theme-dark [class~="text-gray-600"],
-body.theme-dark [class~="text-gray-500"],
-body.theme-dark [class~="text-[#6B7690]"] {
-  color: #94A3B8 !important;
-}
-
-body.theme-dark [class~="text-gray-400"] {
-  color: #CBD5E1 !important;
-}
-
-body.theme-dark [class~="bg-white"],
-body.theme-dark [class~="bg-[#F7F5EF]"] {
-  background-color: var(--paper) !important;
-}
-
-body.theme-dark [class~="border-[#E3DFD3]"],
-body.theme-dark [class~="border-gray-100"],
-body.theme-dark [class~="border-gray-200"],
-body.theme-dark [class~="border-gray-300"] {
-  border-color: var(--line) !important;
-}
-
+/* Base form controls in dark/navy themes */
 body.theme-dark select,
 body.theme-dark input,
-body.theme-dark textarea {
-  background-color: var(--paper) !important;
-  color: #FFFFFF !important;
-  border-color: var(--line) !important;
-}
-
-/* Navy Blue Overrides */
-body.theme-blue [class~="text-[#10203D]"],
-body.theme-blue [class~="text-[#1B3A6B]"],
-body.theme-blue [class~="text-[#33415C]"],
-body.theme-blue [class~="text-gray-900"],
-body.theme-blue [class~="text-gray-800"],
-body.theme-blue [class~="text-gray-700"] {
-  color: #FFFFFF !important;
-}
-
-body.theme-blue [class~="text-gray-600"],
-body.theme-blue [class~="text-gray-500"],
-body.theme-blue [class~="text-[#6B7690]"] {
-  color: #8EAAD4 !important;
-}
-
-body.theme-blue [class~="text-gray-400"] {
-  color: #BAD1F3 !important;
-}
-
-body.theme-blue [class~="bg-white"],
-body.theme-blue [class~="bg-[#F7F5EF]"] {
-  background-color: var(--paper) !important;
-}
-
-body.theme-blue [class~="border-[#E3DFD3]"],
-body.theme-blue [class~="border-gray-100"],
-body.theme-blue [class~="border-gray-200"],
-body.theme-blue [class~="border-gray-300"] {
-  border-color: var(--line) !important;
-}
-
+body.theme-dark textarea,
 body.theme-blue select,
 body.theme-blue input,
 body.theme-blue textarea {
-  background-color: var(--paper) !important;
-  color: #FFFFFF !important;
-  border-color: var(--line) !important;
+  background-color: var(--paper);
+  color: #FFFFFF;
+  border-color: var(--line);
 }
 
-/* Sepia Overrides */
-body.theme-sepia [class~="text-[#10203D]"],
-body.theme-sepia [class~="text-[#1B3A6B]"],
-body.theme-sepia [class~="text-[#33415C]"] {
-  color: #23160D !important;
-}
-
-body.theme-sepia [class~="bg-white"],
-body.theme-sepia [class~="bg-[#F7F5EF]"] {
-  background-color: var(--paper) !important;
-}
-
-body.theme-sepia [class~="border-[#E3DFD3]"] {
-  border-color: var(--line) !important;
+body.theme-light select,
+body.theme-light input,
+body.theme-light textarea {
+  background-color: #FFFFFF;
+  color: #0F172A;
+  border-color: #E2E8F0;
 }
 
 /* Base form controls */
@@ -285,26 +195,51 @@ body.size-xxlarge {
 /* Highlight colors */
 .verse-row.highlight-yellow {
   background-color: #FACC15 !important;
+}
+.verse-row.highlight-yellow,
+.verse-row.highlight-yellow .verse-text,
+.verse-row.highlight-yellow .verse-num,
+.verse-row.highlight-yellow .verse-cell {
   color: #0E1B33 !important;
 }
 
 .verse-row.highlight-pink {
   background-color: #F472B6 !important;
+}
+.verse-row.highlight-pink,
+.verse-row.highlight-pink .verse-text,
+.verse-row.highlight-pink .verse-num,
+.verse-row.highlight-pink .verse-cell {
   color: #0E1B33 !important;
 }
 
 .verse-row.highlight-green {
   background-color: #4ADE80 !important;
+}
+.verse-row.highlight-green,
+.verse-row.highlight-green .verse-text,
+.verse-row.highlight-green .verse-num,
+.verse-row.highlight-green .verse-cell {
   color: #0E1B33 !important;
 }
 
 .verse-row.highlight-blue {
   background-color: #60A5FA !important;
+}
+.verse-row.highlight-blue,
+.verse-row.highlight-blue .verse-text,
+.verse-row.highlight-blue .verse-num,
+.verse-row.highlight-blue .verse-cell {
   color: #0E1B33 !important;
 }
 
 .verse-row.highlight-purple {
   background-color: #C084FC !important;
+}
+.verse-row.highlight-purple,
+.verse-row.highlight-purple .verse-text,
+.verse-row.highlight-purple .verse-num,
+.verse-row.highlight-purple .verse-cell {
   color: #0E1B33 !important;
 }
 
