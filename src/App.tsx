@@ -96,17 +96,37 @@ export default function App() {
     }, 2800);
   }, []);
 
-  // Helper to construct candidate asset URLs regardless of deployment subdirectory
+  // Helper to construct candidate asset URLs regardless of deployment subdirectory (GitHub Pages, custom subpath, root)
   const getBookCandidateUrls = (name: string) => {
     const encoded = encodeURIComponent(name);
+    const urls: string[] = [];
+
+    if (typeof window !== 'undefined') {
+      // 1. Resolve relative to document.baseURI or current path directory
+      try {
+        const baseHref = document.baseURI || window.location.href;
+        const resolved = new URL(`data/${encoded}.json`, baseHref).href;
+        urls.push(resolved);
+      } catch {
+        // Fallback
+      }
+
+      // 2. Resolve with origin and pathname directory (handles /C.O.G-Bible-Application/ paths)
+      const pathname = window.location.pathname;
+      const dir = pathname.substring(0, pathname.lastIndexOf('/') + 1) || '/';
+      urls.push(`${window.location.origin}${dir}data/${encoded}.json`);
+    }
+
+    // 3. Vite base URL
     const base = import.meta.env.BASE_URL || './';
     const prefix = base.endsWith('/') ? base : `${base}/`;
-    return [
-      `${prefix}data/${encoded}.json`,
-      `./data/${encoded}.json`,
-      `/data/${encoded}.json`,
-      `data/${encoded}.json`
-    ];
+    urls.push(`${prefix}data/${encoded}.json`);
+
+    // 4. Relative paths
+    urls.push(`./data/${encoded}.json`);
+    urls.push(`data/${encoded}.json`);
+
+    return Array.from(new Set(urls));
   };
 
   const loadSingleBook = useCallback(async (bookName: string) => {

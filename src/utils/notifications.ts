@@ -36,8 +36,17 @@ export async function sendDailyVerseNotification(
   }
 
   const v = verse || getTodayVerse();
-  const title = customTitle || `📖 Today's Verse: ${v.book} ${v.chapter}:${v.verse}`;
-  const bodyText = `"${v.ceb}"\n— ${v.en}`;
+  const title = customTitle || `📖 ${v.book} ${v.chapter}:${v.verse}`;
+
+  // Format scripture text clearly from the app's Cebuano (Bugna) & KJV (English) translations
+  let bodyText = '';
+  if (v.ceb && v.en && v.ceb !== v.en) {
+    bodyText = `[Cebuano Bugna]\n${v.ceb}\n\n[KJV]\n${v.en}`;
+  } else {
+    bodyText = v.ceb || v.en || '';
+  }
+
+  const hashTarget = `bible?book=${encodeURIComponent(v.book)}&chapter=${v.chapter}&verse=${v.verse}`;
 
   const options: Record<string, unknown> = {
     body: bodyText,
@@ -46,7 +55,7 @@ export async function sendDailyVerseNotification(
     tag: 'cog-daily-verse',
     renotify: true,
     data: {
-      url: `./#bible?book=${encodeURIComponent(v.book)}&chapter=${v.chapter}&verse=${v.verse}`,
+      url: `./#${hashTarget}`,
       book: v.book,
       chapter: v.chapter,
       verse: v.verse

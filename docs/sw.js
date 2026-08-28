@@ -1,4 +1,4 @@
-const CACHE_NAME = 'cog-bible-v2.0.0';
+const CACHE_NAME = 'cog-bible-v3.2.0';
 const STATIC_ASSETS = [
   "./",
   "./index.html",
@@ -72,10 +72,8 @@ const STATIC_ASSETS = [
   "./data/Titus.json",
   "./data/Zechariah.json",
   "./data/Zephaniah.json",
-  "./assets/index-BeBEc71m.css",
-  "./assets/index-BvburaeX.js",
-  "./assets/logo-Jne2Ro8f.png",
-  "./assets/manifest-DkOziRcA.json"
+  "./assets/index-B6YQT-q0.js",
+  "./assets/index-Cv-CeVXg.css"
 ];
 
 // Install: Cache essential assets, including the offline Bible database
@@ -86,7 +84,17 @@ self.addEventListener('install', (event) => {
         if (Array.isArray(STATIC_ASSETS)) {
           await Promise.allSettled(
             STATIC_ASSETS.map((url) =>
-              cache.add(url).catch((err) => console.warn('Precache skip:', url, err))
+              fetch(url)
+                .then((res) => {
+                  if (res.ok) {
+                    const ct = res.headers.get('content-type') || '';
+                    if (url.endsWith('.json') && ct.includes('text/html')) {
+                      return; // Do not cache HTML fallbacks as JSON
+                    }
+                    return cache.put(url, res);
+                  }
+                })
+                .catch((err) => console.warn('Precache skip:', url, err))
             )
           );
         }
@@ -135,14 +143,32 @@ self.addEventListener('fetch', (event) => {
 
   // Assets and Bible data files: Cache first, fallback to network
   event.respondWith(
-    caches.match(event.request).then((cachedResponse) => {
-      if (cachedResponse) return cachedResponse;
+    caches.match(event.request).then(async (cachedResponse) => {
+      if (cachedResponse) {
+        // If it's a JSON data request, verify it's not a corrupted/HTML cached response
+        if (event.request.url.includes('/data/') && event.request.url.endsWith('.json')) {
+          const ct = cachedResponse.headers.get('content-type') || '';
+          if (ct.includes('text/html')) {
+            // Bad cached response, delete it and fetch from network
+            const cache = await caches.open(CACHE_NAME);
+            await cache.delete(event.request);
+          } else {
+            return cachedResponse;
+          }
+        } else {
+          return cachedResponse;
+        }
+      }
 
       return fetch(event.request)
         .then((networkResponse) => {
           if (networkResponse && networkResponse.status === 200) {
-            const copy = networkResponse.clone();
-            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
+            const ct = networkResponse.headers.get('content-type') || '';
+            // Only cache valid non-HTML responses for JSON data
+            if (!event.request.url.endsWith('.json') || !ct.includes('text/html')) {
+              const copy = networkResponse.clone();
+              caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
+            }
           }
           return networkResponse;
         })
@@ -152,3 +178,36 @@ self.addEventListener('fetch', (event) => {
     })
   );
 });
+
+// Notification click event: focus app window and navigate to the bible verse
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  const data = event.notification.data || {};
+  const book = data.book || 'Genesis';
+  const chapter = data.chapter || 1;
+  const verse = data.verse || 1;
+  const targetUrl = `./#bible?book=${encodeURIComponent(book)}&chapter=${chapter}&verse=${verse}`;
+
+  event.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
+      for (const client of clientList) {
+        if ('focus' in client) {
+          client.postMessage({
+            type: 'NAVIGATE_TO_VERSE',
+            book: book,
+            chapter: chapter,
+            verse: verse
+          });
+          if (client.navigate) {
+            client.navigate(targetUrl);
+          }
+          return client.focus();
+        }
+      }
+      if (clients.openWindow) {
+        return clients.openWindow(targetUrl);
+      }
+    })
+  );
+});
+
