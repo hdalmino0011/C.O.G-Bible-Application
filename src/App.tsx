@@ -94,34 +94,60 @@ export default function App() {
     }, 2800);
   }, []);
 
-  // 1. Load Bible Data from verses.json
-  useEffect(() => {
-    async function loadData() {
-      try {
-        const results = await Promise.all(
-          BIBLE_BOOKS.map(async ({ name }) => {
-            const res = await fetch(`./data/${encodeURIComponent(name)}.json`);
-            if (!res.ok) throw new Error(`Failed to load ${name} data`);
-            return [name, await res.json()] as const;
-          }),
-        );
-        const data = Object.fromEntries(results) as BibleData;
-        setBibleData(data);
+  // Helper to construct accurate asset URLs regardless of deployment subdirectory
+  const getBookDataUrl = (name: string) => {
+    const base = import.meta.env.BASE_URL || './';
+    const prefix = base.endsWith('/') ? base : `${base}/`;
+    return `${prefix}data/${encodeURIComponent(name)}.json`;
+  };
 
-        // Restore last read position
-        const last = getLastReadPosition();
-        if (last && data[last.book]) {
-          setCurrentBook(last.book);
-          setCurrentChapter(last.chapter);
-        }
-      } catch (err) {
-        console.error('Error loading Bible data:', err);
-      } finally {
+  const loadSingleBook = useCallback(async (bookName: string) => {
+    try {
+      const res = await fetch(getBookDataUrl(bookName));
+      if (!res.ok) throw new Error(`Status ${res.status}`);
+      const bookContent = await res.json();
+      setBibleData(prev => ({ ...prev, [bookName]: bookContent }));
+      return bookContent;
+    } catch (err) {
+      console.warn(`Could not load scriptures for ${bookName}:`, err);
+      return null;
+    }
+  }, []);
+
+  // 1. Load Initial Book immediately for sub-second startup, then background load the rest
+  useEffect(() => {
+    let isCancelled = false;
+
+    async function initializeScriptures() {
+      const last = getLastReadPosition();
+      const initialBookName = last?.book && BIBLE_BOOKS.some(b => b.name === last.book) ? last.book : 'Genesis';
+      const initialChapterNum = last?.chapter || 1;
+
+      if (last?.book) {
+        setCurrentBook(initialBookName);
+        setCurrentChapter(initialChapterNum);
+      }
+
+      // Step 1: Load the active book right away
+      await loadSingleBook(initialBookName);
+      if (!isCancelled) {
         setIsLoadingBible(false);
       }
+
+      // Step 2: Background load all remaining books in non-blocking batches
+      const remainingBooks = BIBLE_BOOKS.filter(b => b.name !== initialBookName);
+      for (const book of remainingBooks) {
+        if (isCancelled) break;
+        await loadSingleBook(book.name);
+      }
     }
-    loadData();
-  }, []);
+
+    initializeScriptures();
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [loadSingleBook]);
 
   // 2. Apply theme & font classes to document body
   useEffect(() => {
@@ -180,6 +206,9 @@ export default function App() {
     setCurrentChapter(1);
     setSelectedVerse(null);
     setTargetVerseToScroll(null);
+    if (!bibleData[book]) {
+      loadSingleBook(book);
+    }
   };
 
   const handleChapterChange = (chapter: number) => {
@@ -194,6 +223,9 @@ export default function App() {
     setCurrentChapter(chapter);
     if (verse) {
       setTargetVerseToScroll(verse);
+    }
+    if (!bibleData[matchedBook]) {
+      loadSingleBook(matchedBook);
     }
     setCurrentScreen('bible');
     setSelectedVerse(null);
