@@ -9,14 +9,24 @@ function generateOfflineServiceWorker() {
     name: 'generate-offline-service-worker',
     closeBundle() {
       const distDir = path.resolve(__dirname, 'dist');
-      const builtAssets = fs.readdirSync(path.join(distDir, 'assets')).map((file) => `./assets/${file}`);
-      const bibleData = fs.readdirSync(path.resolve(__dirname, 'public/data')).map((file) => `./data/${file}`);
+      if (!fs.existsSync(distDir)) return;
+      const assetsDir = path.join(distDir, 'assets');
+      const builtAssets = fs.existsSync(assetsDir)
+        ? fs.readdirSync(assetsDir).map((file) => `./assets/${file}`)
+        : [];
+      const publicDataDir = path.resolve(__dirname, 'public/data');
+      const bibleData = fs.existsSync(publicDataDir)
+        ? fs.readdirSync(publicDataDir).map((file) => `./data/${file}`)
+        : [];
       const precache = [
         './', './index.html', './app-icon-192.png', './app-icon.png', './app-icon-maskable.png', './manifest.json',
         ...bibleData, ...builtAssets,
       ];
-      const serviceWorker = fs.readFileSync(path.resolve(__dirname, 'public/sw.js'), 'utf8').replace('__PRECACHE_ASSETS__', JSON.stringify(precache, null, 2));
-      fs.writeFileSync(path.join(distDir, 'sw.js'), serviceWorker);
+      const swSrc = path.resolve(__dirname, 'public/sw.js');
+      if (fs.existsSync(swSrc)) {
+        const serviceWorker = fs.readFileSync(swSrc, 'utf8').replace('__PRECACHE_ASSETS__', JSON.stringify(precache, null, 2));
+        fs.writeFileSync(path.join(distDir, 'sw.js'), serviceWorker);
+      }
     },
   };
 }
@@ -27,6 +37,8 @@ export default defineConfig(() => {
     plugins: [react(), tailwindcss(), generateOfflineServiceWorker()],
     resolve: {alias: {'@': path.resolve(__dirname, '.') }},
     server: {
+      host: '0.0.0.0',
+      port: 3000,
       // HMR is disabled in AI Studio via DISABLE_HMR env var.
       // Do not modify—file watching is disabled to prevent flickering during agent edits.
       hmr: process.env.DISABLE_HMR !== 'true',
