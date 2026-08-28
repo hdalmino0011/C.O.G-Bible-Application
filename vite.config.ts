@@ -19,8 +19,18 @@ function generateOfflineServiceWorker() {
         ? fs.readdirSync(publicDataDir).map((file) => `./data/${file}`)
         : [];
       const precache = [
-        './', './index.html', './app-icon-192.png', './app-icon.png', './app-icon-maskable.png', './manifest.json',
-        ...bibleData, ...builtAssets,
+        './',
+        './index.html',
+        './app-icon-192.png',
+        './app-icon.png',
+        './app-icon-maskable.png',
+        './logo.jpg',
+        './logo.png',
+        './manifest.json',
+        './404.html',
+        './.nojekyll',
+        ...bibleData,
+        ...builtAssets,
       ];
       const swSrc = path.resolve(__dirname, 'public/sw.js');
       if (fs.existsSync(swSrc)) {

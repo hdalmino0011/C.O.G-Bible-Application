@@ -1,11 +1,15 @@
 const CACHE_NAME = 'cog-bible-v4.0.0';
-const STATIC_ASSETS = typeof [
+const STATIC_ASSETS = [
   "./",
   "./index.html",
   "./app-icon-192.png",
   "./app-icon.png",
   "./app-icon-maskable.png",
+  "./logo.jpg",
+  "./logo.png",
   "./manifest.json",
+  "./404.html",
+  "./.nojekyll",
   "./data/1 Chronicles.json",
   "./data/1 Corinthians.json",
   "./data/1 John.json",
@@ -139,8 +143,9 @@ const STATIC_ASSETS = typeof [
   "./assets/Zechariah-CoYWbSia.js",
   "./assets/Zephaniah-DmEogkA8.js",
   "./assets/index-DGsDG53v.js",
-  "./assets/index-DZ6VLWLG.css"
-] !== 'undefined' ? __PRECACHE_ASSETS_LIST__ : [];
+  "./assets/index-DZ6VLWLG.css",
+  "./assets/manifest-CHF7-g6h.json"
+];
 
 // Install: Cache essential assets, including the offline Bible database
 self.addEventListener('install', (event) => {
