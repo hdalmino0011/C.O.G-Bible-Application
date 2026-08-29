@@ -156,6 +156,8 @@ export async function verifyAllBooksOffline(): Promise<{
   };
 }
 
+export const getOfflineStorageSummary = verifyAllBooksOffline;
+
 /**
  * Save multiple books to IndexedDB in a single batch
  */

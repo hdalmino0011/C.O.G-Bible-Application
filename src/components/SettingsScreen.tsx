@@ -7,7 +7,10 @@ import {
   TextQuote,
   BellRing,
   Sparkles,
-  Smartphone
+  Smartphone,
+  HardDrive,
+  Download,
+  CheckCircle2
 } from 'lucide-react';
 import { AppTheme, BibleData, FontFamily, FontSize, UserPreferences } from '../types';
 import { getNotificationPermissionStatus, requestNotificationPermission, sendDailyVerseNotification, isNotificationSupported } from '../utils/notifications';
@@ -19,13 +22,17 @@ interface SettingsScreenProps {
   onUpdatePreferences: (updated: Partial<UserPreferences>) => void;
   bibleData?: BibleData;
   onShowToast?: (msg: string) => void;
+  onOpenOfflineModal?: () => void;
+  isFullyDownloaded?: boolean;
 }
 
 export const SettingsScreen: React.FC<SettingsScreenProps> = ({
   preferences,
   onUpdatePreferences,
   bibleData,
-  onShowToast
+  onShowToast,
+  onOpenOfflineModal,
+  isFullyDownloaded
 }) => {
   const [isTestingNotification, setIsTestingNotification] = useState(false);
   const [permStatus, setPermStatus] = useState(getNotificationPermissionStatus());
@@ -231,6 +238,48 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
             </button>
           ))}
         </div>
+      </div>
+
+      {/* Offline Storage & Package */}
+      <div className="bg-white dark:bg-[#142036] border border-[#E2DED2] dark:border-[#22314E] rounded-2xl p-5 shadow-xs space-y-3">
+        <div className="flex items-center justify-between">
+          <h3 className="font-serif font-bold text-base flex items-center gap-2" style={{ color: 'var(--ink)' }}>
+            <HardDrive className="w-4 h-4 text-[#C9A227]" />
+            Offline Scripture Package
+          </h3>
+          {isFullyDownloaded ? (
+            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800 flex items-center gap-1">
+              <CheckCircle2 className="w-3 h-3" /> Complete
+            </span>
+          ) : (
+            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-800">
+              Download Available
+            </span>
+          )}
+        </div>
+
+        <p className="text-xs text-gray-600 dark:text-gray-400">
+          {isFullyDownloaded
+            ? 'All 66 Old and New Testament books with dual Cebuano & English translations are stored locally on your device.'
+            : 'Download the full bilingual scripture database into device storage for 100% offline access without internet.'}
+        </p>
+
+        <button
+          onClick={onOpenOfflineModal}
+          className="w-full py-2.5 px-4 rounded-xl bg-[#1B3A6B] dark:bg-[#C9A227] text-white dark:text-[#0E1B33] font-semibold text-xs hover:opacity-90 active:scale-98 transition-all flex items-center justify-center gap-2 cursor-pointer shadow-xs"
+        >
+          {isFullyDownloaded ? (
+            <>
+              <CheckCircle2 className="w-4 h-4" />
+              Manage Offline Package
+            </>
+          ) : (
+            <>
+              <Download className="w-4 h-4" />
+              Download Offline Package (~7 MB)
+            </>
+          )}
+        </button>
       </div>
 
       {/* About The Church of God */}

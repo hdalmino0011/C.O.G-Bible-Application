@@ -50,13 +50,16 @@ import {
 
 import {
   getBookFromIndexedDB,
-  saveBookToIndexedDB
+  saveBookToIndexedDB,
+  getAllStoredBookNamesFromIndexedDB,
+  getOfflineStorageSummary
 } from './utils/offlineDb';
 
 import { BIBLE_BOOKS, normalizeBookName } from './data/books';
 import { BOOK_LOADERS } from './data/bookModules';
 import { getRandomDailyVerse } from './data/dailyVerses';
 import { sendDailyVerseNotification } from './utils/notifications';
+import { OfflinePackageModal } from './components/OfflinePackageModal';
 
 export default function App() {
   const [showSplash, setShowSplash] = useState(true);
@@ -102,6 +105,16 @@ export default function App() {
       setToastMessage(prev => (prev === msg ? null : prev));
     }, 2800);
   }, []);
+
+  // Offline Package Modal & Downloader State
+  const [isOfflineModalOpen, setIsOfflineModalOpen] = useState(false);
+  const [isDownloadingPackage, setIsDownloadingPackage] = useState(false);
+  const [downloadProgress, setDownloadProgress] = useState<{ current: number; total: number; currentBook: string }>({
+    current: 0,
+    total: BIBLE_BOOKS.length,
+    currentBook: ''
+  });
+  const [isFullyDownloaded, setIsFullyDownloaded] = useState(false);
 
   // Helper to construct candidate asset URLs regardless of deployment subdirectory
   const getBookCandidateUrls = (name: string) => {
@@ -202,7 +215,7 @@ export default function App() {
     return null;
   }, []);
 
-  // 1. Initial startup: Load active book immediately, then rapidly unpack & persist all 66 books to phone storage
+  // 1. Initial startup: Load active book immediately, check offline package status, and prompt user if needed
   useEffect(() => {
     let isCancelled = false;
 
@@ -222,14 +235,32 @@ export default function App() {
         setIsLoadingBible(false);
       }
 
-      // Step 2: Background unpack and persist all remaining 65 books into phone storage
-      const remainingBooks = BIBLE_BOOKS.filter(b => b.name !== initialBookName);
-      const batchSize = 6;
-      for (let i = 0; i < remainingBooks.length; i += batchSize) {
-        if (isCancelled) break;
-        const batch = remainingBooks.slice(i, i + batchSize);
-        await Promise.allSettled(batch.map(b => loadSingleBook(b.name)));
-        await new Promise(r => setTimeout(r, 40));
+      // Step 2: Check offline storage status
+      try {
+        const summary = await getOfflineStorageSummary();
+        if (!isCancelled) {
+          setDownloadProgress({
+            current: summary.presentCount,
+            total: summary.totalCount,
+            currentBook: ''
+          });
+          const allStored = summary.presentCount === summary.totalCount;
+          setIsFullyDownloaded(allStored);
+
+          // If not all books are in local storage, pop up modal on landing page after splash
+          const hasPrompted = sessionStorage.getItem('cog_offline_prompted');
+          if (!allStored && !hasPrompted) {
+            sessionStorage.setItem('cog_offline_prompted', 'true');
+            // Give brief moment for smooth splash transition
+            setTimeout(() => {
+              if (!isCancelled) {
+                setIsOfflineModalOpen(true);
+              }
+            }, 1200);
+          }
+        }
+      } catch (err) {
+        console.warn('Storage check warning:', err);
       }
     }
 
@@ -239,6 +270,40 @@ export default function App() {
       isCancelled = true;
     };
   }, [loadSingleBook]);
+
+  // Dedicated one-tap Offline Package Downloader
+  const handleDownloadFullPackage = useCallback(async () => {
+    setIsDownloadingPackage(true);
+    let downloadedCount = 0;
+
+    for (let i = 0; i < BIBLE_BOOKS.length; i++) {
+      const book = BIBLE_BOOKS[i];
+      setDownloadProgress({
+        current: downloadedCount,
+        total: BIBLE_BOOKS.length,
+        currentBook: book.name
+      });
+
+      try {
+        await loadSingleBook(book.name);
+      } catch (err) {
+        console.warn(`Error loading ${book.name}:`, err);
+      }
+
+      downloadedCount++;
+      setDownloadProgress({
+        current: downloadedCount,
+        total: BIBLE_BOOKS.length,
+        currentBook: book.name
+      });
+      // Brief yield so browser UI and progress bar animate smoothly
+      await new Promise(r => setTimeout(r, 20));
+    }
+
+    setIsDownloadingPackage(false);
+    setIsFullyDownloaded(true);
+    showToast('66 Books installed! App is 100% offline ready.');
+  }, [loadSingleBook, showToast]);
 
   // 2. Apply theme & font classes to document body
   useEffect(() => {
@@ -646,9 +711,21 @@ export default function App() {
             onUpdatePreferences={handleUpdatePreferences}
             bibleData={bibleData}
             onShowToast={showToast}
+            onOpenOfflineModal={() => setIsOfflineModalOpen(true)}
+            isFullyDownloaded={isFullyDownloaded}
           />
         )}
       </main>
+
+      {/* Offline Package Modal (Prompt on landing page / manual from settings) */}
+      <OfflinePackageModal
+        isOpen={isOfflineModalOpen}
+        onClose={() => setIsOfflineModalOpen(false)}
+        isDownloading={isDownloadingPackage}
+        downloadProgress={downloadProgress}
+        isFullyDownloaded={isFullyDownloaded}
+        onStartDownload={handleDownloadFullPackage}
+      />
 
       {/* 4. Verse Interaction Toolbar (Float at bottom) */}
       <VerseToolbar
