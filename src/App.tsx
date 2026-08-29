@@ -52,9 +52,6 @@ import { BIBLE_BOOKS, normalizeBookName } from './data/books';
 import { getRandomDailyVerse } from './data/dailyVerses';
 import { sendDailyVerseNotification } from './utils/notifications';
 
-// Top-level static glob for all Bible JSON datasets so Vite compiles them into instant modules
-const bibleModules = import.meta.glob<Record<number, VerseItem[]>>('../data/*.json');
-
 export default function App() {
   const [showSplash, setShowSplash] = useState(true);
   const [bibleData, setBibleData] = useState<BibleData>({});
@@ -136,22 +133,7 @@ export default function App() {
   const loadSingleBook = useCallback(async (bookName: string) => {
     if (!bookName) return null;
 
-    // Strategy 1: Vite dynamic module import (Bundled directly by Vite with chunk hashing)
-    try {
-      const targetKey = `../data/${bookName}.json`;
-      if (bibleModules && bibleModules[targetKey]) {
-        const moduleResult = await bibleModules[targetKey]();
-        const content = (moduleResult && ((moduleResult as any).default || moduleResult)) as BookChapters;
-        if (content && typeof content === 'object' && Object.keys(content).length > 0) {
-          setBibleData(prev => ({ ...prev, [bookName]: content }));
-          return content;
-        }
-      }
-    } catch {
-      // Fallback to fetch
-    }
-
-    // Strategy 2: Direct URL fetch across candidate paths
+    // Load book JSON directly across candidate paths (supports GitHub Pages root/subpaths & local dev)
     const urls = getBookCandidateUrls(bookName);
 
     for (let i = 0; i < urls.length; i++) {
