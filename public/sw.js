@@ -1,4 +1,4 @@
-const CACHE_NAME = 'cog-bible-v4.0.2';
+const CACHE_NAME = 'cog-bible-v4.0.3';
 const STATIC_ASSETS = typeof __PRECACHE_ASSETS_LIST__ !== 'undefined' && Array.isArray(__PRECACHE_ASSETS_LIST__)
   ? __PRECACHE_ASSETS_LIST__
   : [];
@@ -56,7 +56,7 @@ self.addEventListener('fetch', (event) => {
         .then((response) => {
           if (response && response.status === 200) {
             const copy = response.clone();
-            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
+            event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy)));
           }
           return response;
         })
@@ -102,7 +102,7 @@ self.addEventListener('fetch', (event) => {
             // Only cache valid non-HTML responses for JSON data
             if (!event.request.url.endsWith('.json') || !ct.includes('text/html')) {
               const copy = networkResponse.clone();
-              caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
+              event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy)));
             }
           }
           return networkResponse;
