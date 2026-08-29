@@ -1,117 +1,173 @@
-const CACHE_NAME = 'cog-bible-v4.0.3';
+const CACHE_NAME = 'cog-bible-offline-v5.0.0';
 const STATIC_ASSETS = typeof __PRECACHE_ASSETS_LIST__ !== 'undefined' && Array.isArray(__PRECACHE_ASSETS_LIST__)
   ? __PRECACHE_ASSETS_LIST__
   : [];
 
-// Install: Cache essential assets, including the offline Bible database
+// Install: Pre-cache all essential application assets and Bible database packages
 self.addEventListener('install', (event) => {
+  self.skipWaiting();
   event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then(async (cache) => {
-        if (Array.isArray(STATIC_ASSETS) && STATIC_ASSETS.length > 0) {
-          await Promise.allSettled(
-            STATIC_ASSETS.map((url) =>
-              fetch(url)
-                .then((res) => {
-                  if (res && res.status === 200) {
-                    const ct = res.headers.get('content-type') || '';
-                    if (url.endsWith('.json') && ct.includes('text/html')) {
-                      return; // Do not cache HTML fallbacks as JSON
-                    }
-                    return cache.put(url, res);
-                  }
-                })
-                .catch((err) => console.warn('Precache skip:', url, err))
-            )
-          );
-        }
-      })
-      .then(() => self.skipWaiting())
+    caches.open(CACHE_NAME).then(async (cache) => {
+      if (Array.isArray(STATIC_ASSETS) && STATIC_ASSETS.length > 0) {
+        // Cache assets with fault tolerance (settled)
+        await Promise.allSettled(
+          STATIC_ASSETS.map(async (url) => {
+            try {
+              const res = await fetch(url, { cache: 'no-cache' });
+              if (res && res.status === 200) {
+                const ct = res.headers.get('content-type') || '';
+                // Don't cache HTML fallback as JSON data
+                if (url.endsWith('.json') && ct.includes('text/html')) {
+                  return;
+                }
+                await cache.put(url, res.clone());
+
+                // Also store with normalized / decoded URL if it has special characters or spaces
+                const decoded = decodeURIComponent(url);
+                if (decoded !== url) {
+                  await cache.put(decoded, res);
+                }
+              }
+            } catch (err) {
+              console.warn('[SW] Precache skip for asset:', url, err);
+            }
+          })
+        );
+      }
+    })
   );
 });
 
-// Activate: Purge all older and stale caches immediately
+// Activate: Purge older cache versions and take immediate control of clients
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys()
-      .then((keys) => Promise.all(
-        keys.map((key) => {
-          if (key !== CACHE_NAME) {
-            return caches.delete(key);
-          }
-        })
-      ))
+      .then((keys) =>
+        Promise.all(
+          keys.map((key) => {
+            if (key !== CACHE_NAME) {
+              return caches.delete(key);
+            }
+          })
+        )
+      )
       .then(() => self.clients.claim())
   );
 });
 
-// Fetch: Network-first for navigation, Cache-first with network fallback for assets/data
+// Helper to look up a request in cache across URL variants (encoded, decoded, relative path)
+async function matchCacheFlexible(request) {
+  const cache = await caches.open(CACHE_NAME);
+  
+  // 1. Direct match with ignoreSearch
+  let matched = await cache.match(request, { ignoreSearch: true });
+  if (matched && matched.status === 200) return matched;
+
+  const urlStr = typeof request === 'string' ? request : request.url;
+
+  // 2. Try URL Decoded match
+  try {
+    const decodedUrl = decodeURIComponent(urlStr);
+    matched = await cache.match(decodedUrl, { ignoreSearch: true });
+    if (matched && matched.status === 200) return matched;
+  } catch {}
+
+  // 3. Match by filename / suffix (e.g. "Genesis.json" or "data/Genesis.json")
+  try {
+    const parsed = new URL(urlStr, self.location.origin);
+    const pathname = parsed.pathname;
+    const allKeys = await cache.keys();
+    for (const key of allKeys) {
+      const keyParsed = new URL(key.url, self.location.origin);
+      if (keyParsed.pathname === pathname || decodeURIComponent(keyParsed.pathname) === decodeURIComponent(pathname)) {
+        const item = await cache.match(key);
+        if (item && item.status === 200) return item;
+      }
+    }
+  } catch {}
+
+  return null;
+}
+
+// Fetch handler: Network-first for navigation, Cache-first for data & assets
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
 
-  // HTML page navigation: Try network first to get latest updates, fallback to offline cache
+  const requestUrl = event.request.url;
+
+  // 1. Navigation requests (HTML pages)
   if (event.request.mode === 'navigate') {
     event.respondWith(
       fetch(event.request)
-        .then((response) => {
-          if (response && response.status === 200) {
-            const copy = response.clone();
-            event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy)));
+        .then((networkRes) => {
+          if (networkRes && networkRes.status === 200) {
+            const copy = networkRes.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
           }
-          return response;
+          return networkRes;
         })
         .catch(async () => {
-          const cached = await caches.match(event.request);
-          if (cached && cached.status === 200) return cached;
-          const indexHtml = await caches.match('./index.html');
-          if (indexHtml && indexHtml.status === 200) return indexHtml;
-          const rootCached = await caches.match('./');
-          if (rootCached && rootCached.status === 200) return rootCached;
+          const cached = await matchCacheFlexible(event.request);
+          if (cached) return cached;
+          const indexHtml = await matchCacheFlexible('./index.html');
+          if (indexHtml) return indexHtml;
+          const root = await matchCacheFlexible('./');
+          if (root) return root;
           return new Response('Offline', { status: 503, headers: { 'Content-Type': 'text/plain' } });
         })
     );
     return;
   }
 
-  // Assets and Bible data files: Cache first (only if valid 200 OK), fallback to network
+  // 2. Bible Data JSON & Static Assets (Cache-First with network fallback)
   event.respondWith(
-    caches.match(event.request).then(async (cachedResponse) => {
+    matchCacheFlexible(event.request).then(async (cachedResponse) => {
       if (cachedResponse) {
-        // If not 200 OK, delete corrupted cache entry
-        if (cachedResponse.status !== 200) {
+        // Validate it's not a corrupted HTML fallback
+        const ct = cachedResponse.headers.get('content-type') || '';
+        if (requestUrl.endsWith('.json') && ct.includes('text/html')) {
           const cache = await caches.open(CACHE_NAME);
           await cache.delete(event.request);
-        } else if (event.request.url.includes('/data/') && event.request.url.endsWith('.json')) {
-          const ct = cachedResponse.headers.get('content-type') || '';
-          if (ct.includes('text/html')) {
-            // Bad cached response (HTML fallback), delete it and fetch from network
-            const cache = await caches.open(CACHE_NAME);
-            await cache.delete(event.request);
-          } else {
-            return cachedResponse;
-          }
         } else {
           return cachedResponse;
         }
       }
 
+      // Fetch from network and store in cache
       return fetch(event.request)
         .then((networkResponse) => {
           if (networkResponse && networkResponse.status === 200) {
             const ct = networkResponse.headers.get('content-type') || '';
-            // Only cache valid non-HTML responses for JSON data
-            if (!event.request.url.endsWith('.json') || !ct.includes('text/html')) {
+            if (!requestUrl.endsWith('.json') || !ct.includes('text/html')) {
               const copy = networkResponse.clone();
-              event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy)));
+              caches.open(CACHE_NAME).then((cache) => {
+                cache.put(event.request, copy);
+                try {
+                  const decoded = decodeURIComponent(event.request.url);
+                  if (decoded !== event.request.url) {
+                    cache.put(decoded, networkResponse.clone());
+                  }
+                } catch {}
+              });
             }
           }
           return networkResponse;
         })
         .catch(() => {
-          return new Response('', { status: 408, statusText: 'Offline or asset not cached' });
+          return new Response('{}', {
+            status: 404,
+            headers: { 'Content-Type': requestUrl.endsWith('.json') ? 'application/json' : 'text/plain' }
+          });
         });
     })
   );
+});
+
+// Client Message Listener
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
 });
 
 // Notification click event: focus app window and navigate to the bible verse
@@ -145,4 +201,5 @@ self.addEventListener('notificationclick', (event) => {
     })
   );
 });
+
 

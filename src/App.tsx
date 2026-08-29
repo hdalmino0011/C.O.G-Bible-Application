@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Splash } from './components/Splash';
 import { Header } from './components/Header';
@@ -48,6 +48,14 @@ import {
   saveStoredQuizStats
 } from './utils/storage';
 
+import {
+  getBookFromIndexedDB,
+  saveBookToIndexedDB,
+  getStoredBooksCountFromIndexedDB,
+  getAllStoredBookNamesFromIndexedDB,
+  verifyAllBooksOffline
+} from './utils/offlineDb';
+
 import { BIBLE_BOOKS, normalizeBookName } from './data/books';
 import { getRandomDailyVerse } from './data/dailyVerses';
 import { sendDailyVerseNotification } from './utils/notifications';
@@ -56,6 +64,16 @@ export default function App() {
   const [showSplash, setShowSplash] = useState(true);
   const [bibleData, setBibleData] = useState<BibleData>({});
   const [isLoadingBible, setIsLoadingBible] = useState(true);
+
+  // Offline Phone Storage State
+  const [isOnline, setIsOnline] = useState<boolean>(typeof navigator !== 'undefined' ? navigator.onLine : true);
+  const [offlineStoredCount, setOfflineStoredCount] = useState<number>(0);
+  const [isDownloadingOffline, setIsDownloadingOffline] = useState<boolean>(false);
+  const [offlineDownloadProgress, setOfflineDownloadProgress] = useState<number>(0);
+  const [currentDownloadingBook, setCurrentDownloadingBook] = useState<string>('');
+
+  // PWA Install Prompt
+  const [deferredInstallPrompt, setDeferredInstallPrompt] = useState<any>(null);
 
   // Navigation & Reading State
   const [currentScreen, setCurrentScreen] = useState<ScreenType>('bible');
@@ -97,13 +115,45 @@ export default function App() {
     }, 2800);
   }, []);
 
-  // Helper to construct candidate asset URLs regardless of deployment subdirectory (GitHub Pages, custom subpath, root)
+  // Network online/offline listener
+  useEffect(() => {
+    const handleOnline = () => {
+      setIsOnline(true);
+      showToast('Internet connection restored');
+    };
+    const handleOffline = () => {
+      setIsOnline(false);
+      showToast('Offline Mode: Reading from local phone files');
+    };
+
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+
+    // Initial check of local IndexedDB count
+    getStoredBooksCountFromIndexedDB().then(count => {
+      setOfflineStoredCount(count);
+    });
+
+    // Capture PWA install prompt
+    const handleBeforeInstall = (e: Event) => {
+      e.preventDefault();
+      setDeferredInstallPrompt(e);
+    };
+    window.addEventListener('beforeinstallprompt', handleBeforeInstall);
+
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstall);
+    };
+  }, [showToast]);
+
+  // Helper to construct candidate asset URLs regardless of deployment subdirectory
   const getBookCandidateUrls = (name: string) => {
     const encoded = encodeURIComponent(name);
     const urls: string[] = [];
 
     if (typeof window !== 'undefined') {
-      // 1. Resolve relative to document.baseURI or current path directory
       try {
         const baseHref = document.baseURI || window.location.href;
         const resolved = new URL(`data/${encoded}.json`, baseHref).href;
@@ -112,28 +162,36 @@ export default function App() {
         // Fallback
       }
 
-      // 2. Resolve with origin and pathname directory (handles /C.O.G-Bible-Application/ paths)
       const pathname = window.location.pathname;
       const dir = pathname.substring(0, pathname.lastIndexOf('/') + 1) || '/';
       urls.push(`${window.location.origin}${dir}data/${encoded}.json`);
     }
 
-    // 3. Vite base URL
     const base = import.meta.env.BASE_URL || './';
     const prefix = base.endsWith('/') ? base : `${base}/`;
     urls.push(`${prefix}data/${encoded}.json`);
-
-    // 4. Relative paths
     urls.push(`./data/${encoded}.json`);
     urls.push(`data/${encoded}.json`);
 
     return Array.from(new Set(urls));
   };
 
-  const loadSingleBook = useCallback(async (bookName: string) => {
+  // Robust book loader: IndexedDB first (zero network lag/100% offline), then Cache/Fetch fallback
+  const loadSingleBook = useCallback(async (bookName: string): Promise<BookChapters | null> => {
     if (!bookName) return null;
 
-    // Load book JSON directly across candidate paths (supports GitHub Pages root/subpaths & local dev)
+    // 1. Check local IndexedDB phone storage first
+    try {
+      const dbContent = await getBookFromIndexedDB(bookName);
+      if (dbContent && typeof dbContent === 'object' && Object.keys(dbContent).length > 0) {
+        setBibleData(prev => ({ ...prev, [bookName]: dbContent }));
+        return dbContent;
+      }
+    } catch {
+      // Continue to fetch
+    }
+
+    // 2. Fetch from candidate URLs (Cache or Network)
     const urls = getBookCandidateUrls(bookName);
 
     for (let i = 0; i < urls.length; i++) {
@@ -145,7 +203,7 @@ export default function App() {
         let rawText = await res.text();
         let trimmed = rawText.trim();
 
-        // If returned HTML (e.g. 404/SPA index.html fallback), retry with cache-busting query
+        // If returned HTML (e.g. 404/SPA index.html fallback), retry with cache-busting
         if (trimmed.startsWith('<') || !trimmed.startsWith('{')) {
           const freshRes = await fetch(`${url}?t=${Date.now()}`, { cache: 'no-store' });
           if (!freshRes.ok) continue;
@@ -158,6 +216,10 @@ export default function App() {
         let bookContent = JSON.parse(trimmed) as BookChapters;
         if (bookContent && typeof bookContent === 'object' && Object.keys(bookContent).length > 0) {
           setBibleData(prev => ({ ...prev, [bookName]: bookContent }));
+          // Persist in phone IndexedDB so it's permanently stored on device
+          saveBookToIndexedDB(bookName, bookContent).then(() => {
+            getStoredBooksCountFromIndexedDB().then(setOfflineStoredCount);
+          }).catch(() => {});
           return bookContent;
         }
       } catch {
@@ -169,7 +231,70 @@ export default function App() {
     return null;
   }, []);
 
-  // 1. Load Initial Book immediately for sub-second startup, then background load the rest
+  // Download & sync all 66 books to phone local storage
+  const handleDownloadAllOffline = useCallback(async () => {
+    if (isDownloadingOffline) return;
+
+    setIsDownloadingOffline(true);
+    setOfflineDownloadProgress(0);
+    showToast('Starting download of all 66 Bible books to phone storage...');
+
+    try {
+      const storedNames = new Set(await getAllStoredBookNamesFromIndexedDB());
+      const total = BIBLE_BOOKS.length;
+      let completed = storedNames.size;
+
+      for (let i = 0; i < total; i++) {
+        const book = BIBLE_BOOKS[i];
+        setCurrentDownloadingBook(book.name);
+        setOfflineDownloadProgress(((i + 1) / total) * 100);
+
+        if (!storedNames.has(book.name)) {
+          await loadSingleBook(book.name);
+          completed++;
+        }
+      }
+
+      const finalCount = await getStoredBooksCountFromIndexedDB();
+      setOfflineStoredCount(finalCount);
+      showToast(`100% Complete: All ${finalCount} books safely stored on your phone for offline use!`);
+    } catch (err) {
+      console.error('Offline download failed:', err);
+      showToast('Offline download encountered an issue. Please try again.');
+    } finally {
+      setIsDownloadingOffline(false);
+      setCurrentDownloadingBook('');
+    }
+  }, [isDownloadingOffline, loadSingleBook, showToast]);
+
+  // Verify offline storage
+  const handleVerifyOfflineStorage = useCallback(async () => {
+    const result = await verifyAllBooksOffline();
+    setOfflineStoredCount(result.presentCount);
+    if (result.missingCount === 0) {
+      showToast(`Verification Passed: All ${result.totalCount} books verified in phone database!`);
+    } else {
+      showToast(`${result.presentCount} of ${result.totalCount} books cached. Downloading missing books...`);
+      handleDownloadAllOffline();
+    }
+  }, [handleDownloadAllOffline, showToast]);
+
+  // Handle PWA installation
+  const handleInstallPWA = () => {
+    if (deferredInstallPrompt) {
+      deferredInstallPrompt.prompt();
+      deferredInstallPrompt.userChoice.then((choice: any) => {
+        if (choice.outcome === 'accepted') {
+          showToast('Bible app installed successfully to your phone!');
+          setDeferredInstallPrompt(null);
+        }
+      });
+    } else {
+      showToast('To install on iOS: Tap Share ➔ Add to Home Screen');
+    }
+  };
+
+  // 1. Initial startup: Load active book immediately from phone files, then background cache rest
   useEffect(() => {
     let isCancelled = false;
 
@@ -183,17 +308,28 @@ export default function App() {
         setCurrentChapter(initialChapterNum);
       }
 
-      // Step 1: Load the active book right away
+      // Step 1: Load the active book right away from local DB or network
       await loadSingleBook(initialBookName);
       if (!isCancelled) {
         setIsLoadingBible(false);
       }
 
-      // Step 2: Background load all remaining books in non-blocking batches
+      // Step 2: Query stored count
+      const count = await getStoredBooksCountFromIndexedDB();
+      if (!isCancelled) {
+        setOfflineStoredCount(count);
+      }
+
+      // Step 3: Background populate any missing books into phone storage
       const remainingBooks = BIBLE_BOOKS.filter(b => b.name !== initialBookName);
       for (const book of remainingBooks) {
         if (isCancelled) break;
         await loadSingleBook(book.name);
+      }
+
+      const finalCount = await getStoredBooksCountFromIndexedDB();
+      if (!isCancelled) {
+        setOfflineStoredCount(finalCount);
       }
     }
 
@@ -222,7 +358,7 @@ export default function App() {
     }
   }, [currentBook, currentChapter]);
 
-  // Keyboard shortcut listener (Ctrl+K or ⌘K for search, Escape for closing modals)
+  // Keyboard shortcut listener
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
@@ -299,7 +435,7 @@ export default function App() {
     handleNavigateToVerse(bookName, chapter, verse);
   };
 
-  // Notification routing listeners (Service Worker postMessage, CustomEvent, and URL hash)
+  // Notification routing listeners
   useEffect(() => {
     const parseAndRouteHash = () => {
       const hash = window.location.hash;
@@ -316,7 +452,6 @@ export default function App() {
     parseAndRouteHash();
     window.addEventListener('hashchange', parseAndRouteHash);
 
-    // CustomEvent from desktop notifications
     const handleCustomNav = (e: Event) => {
       const customEvent = e as CustomEvent<{ book: string; chapter: number; verse?: number }>;
       if (customEvent.detail) {
@@ -326,7 +461,6 @@ export default function App() {
     };
     window.addEventListener('cog-navigate-verse', handleCustomNav);
 
-    // Service Worker message event (mobile notification tap)
     const handleSWMessage = (event: MessageEvent) => {
       if (event.data && event.data.type === 'NAVIGATE_TO_VERSE') {
         const { book, chapter, verse } = event.data;
@@ -369,9 +503,8 @@ export default function App() {
       }
     };
 
-    // Check on startup after a short delay
     const initialTimer = setTimeout(checkAndTriggerDailyVerse, 4000);
-    const intervalTimer = setInterval(checkAndTriggerDailyVerse, 60000 * 30); // check every 30 mins
+    const intervalTimer = setInterval(checkAndTriggerDailyVerse, 60000 * 30);
 
     return () => {
       clearTimeout(initialTimer);
@@ -436,7 +569,6 @@ export default function App() {
       navigator.clipboard.writeText(text);
       showToast(`Copied ${ref} to clipboard`);
     } else {
-      // Fallback
       const ta = document.createElement('textarea');
       ta.value = text;
       document.body.appendChild(ta);
@@ -549,6 +681,10 @@ export default function App() {
         currentBook={currentBook}
         currentChapter={currentChapter}
         onGoToBible={() => setCurrentScreen('bible')}
+        isOnline={isOnline}
+        offlineCount={offlineStoredCount}
+        totalBooks={BIBLE_BOOKS.length}
+        isDownloadingOffline={isDownloadingOffline}
       />
 
       {/* 3. Main Body Screen Views */}
@@ -614,6 +750,16 @@ export default function App() {
             onUpdatePreferences={handleUpdatePreferences}
             bibleData={bibleData}
             onShowToast={showToast}
+            isOnline={isOnline}
+            offlineCount={offlineStoredCount}
+            totalBooks={BIBLE_BOOKS.length}
+            isDownloadingOffline={isDownloadingOffline}
+            offlineDownloadProgress={offlineDownloadProgress}
+            currentDownloadingBook={currentDownloadingBook}
+            onDownloadAllOffline={handleDownloadAllOffline}
+            onVerifyOfflineStorage={handleVerifyOfflineStorage}
+            canInstallPWA={!!deferredInstallPrompt}
+            onInstallPWA={handleInstallPWA}
           />
         )}
       </main>
@@ -696,3 +842,4 @@ export default function App() {
     </div>
   );
 }
+

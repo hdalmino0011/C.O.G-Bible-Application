@@ -1,5 +1,5 @@
 import React from 'react';
-import { Search, Bookmark as BookmarkIcon, Columns } from 'lucide-react';
+import { Search, Bookmark as BookmarkIcon, Columns, WifiOff, Download, CheckCircle2 } from 'lucide-react';
 import { ReadingLayout, ScreenType } from '../types';
 
 interface HeaderProps {
@@ -13,6 +13,10 @@ interface HeaderProps {
   currentBook?: string;
   currentChapter?: number;
   onGoToBible?: () => void;
+  isOnline?: boolean;
+  offlineCount?: number;
+  totalBooks?: number;
+  isDownloadingOffline?: boolean;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -25,7 +29,11 @@ export const Header: React.FC<HeaderProps> = ({
   notesCount,
   currentBook,
   currentChapter,
-  onGoToBible
+  onGoToBible,
+  isOnline = true,
+  offlineCount = 66,
+  totalBooks = 66,
+  isDownloadingOffline = false
 }) => {
   const totalSaved = bookmarkCount + notesCount;
 
@@ -74,14 +82,28 @@ export const Header: React.FC<HeaderProps> = ({
         </button>
 
         <div className="min-w-0">
-          <h1 className="font-serif text-base sm:text-lg font-bold tracking-tight text-white truncate flex items-center gap-1.5">
-            {getScreenTitle()}
+          <div className="flex items-center gap-1.5 truncate">
+            <h1 className="font-serif text-base sm:text-lg font-bold tracking-tight text-white truncate">
+              {getScreenTitle()}
+            </h1>
+            {!isOnline && (
+              <span className="inline-flex items-center gap-1 text-[10px] font-sans font-semibold text-amber-300 bg-amber-950/60 border border-amber-400/40 px-1.5 py-0.5 rounded-full" title="Running offline from phone files">
+                <WifiOff className="w-2.5 h-2.5" />
+                Offline
+              </span>
+            )}
+            {isDownloadingOffline && (
+              <span className="inline-flex items-center gap-1 text-[10px] font-sans font-semibold text-[#E4C765] bg-[#E4C765]/20 px-1.5 py-0.5 rounded-full animate-pulse">
+                <Download className="w-2.5 h-2.5 animate-bounce" />
+                Saving...
+              </span>
+            )}
             {currentScreen === 'bible' && (
               <span className="hidden md:inline-block text-[11px] font-sans font-normal text-[#E4C765] bg-[#E4C765]/15 px-2 py-0.5 rounded-full">
                 CEB • KJV
               </span>
             )}
-          </h1>
+          </div>
           {currentScreen === 'bible' && (
             <p className="text-[10px] text-blue-200/80 tracking-wide font-light hidden sm:block truncate">
               The Church of God (Truth, Justice, and Righteousness)
@@ -161,3 +183,4 @@ export const Header: React.FC<HeaderProps> = ({
     </header>
   );
 };
+

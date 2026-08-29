@@ -2,6 +2,50 @@ const fs = require('node:fs');
 const path = require('node:path');
 
 const projectRoot = process.cwd();
+
+// Ensure public/data exists and contains all JSON files from data/
+const sourceDir = path.join(projectRoot, 'data');
+const publicDir = path.join(projectRoot, 'public/data');
+if (fs.existsSync(sourceDir)) {
+  if (!fs.existsSync(publicDir)) {
+    fs.mkdirSync(publicDir, { recursive: true });
+  }
+  const sourceFiles = fs.readdirSync(sourceDir).filter((file) => file.endsWith('.json'));
+  for (const file of sourceFiles) {
+    const destFile = path.join(publicDir, file);
+    if (!fs.existsSync(destFile)) {
+      fs.copyFileSync(path.join(sourceDir, file), destFile);
+    }
+  }
+}
+
+// Ensure icons, logos, and fallback files exist in public/
+const staticFiles = [
+  'app-icon-192.png',
+  'app-icon-maskable.png',
+  'app-icon.png',
+  '404.html',
+  '.nojekyll'
+];
+for (const sf of staticFiles) {
+  const rootSrc = path.join(projectRoot, sf);
+  const pubDest = path.join(projectRoot, 'public', sf);
+  if (fs.existsSync(rootSrc) && !fs.existsSync(pubDest)) {
+    fs.copyFileSync(rootSrc, pubDest);
+  }
+}
+
+const logoJpgDoc = path.join(projectRoot, 'docs/logo.jpg');
+const logoJpgPub = path.join(projectRoot, 'public/logo.jpg');
+const logoPngPub = path.join(projectRoot, 'public/logo.png');
+
+if (fs.existsSync(logoJpgDoc)) {
+  if (!fs.existsSync(logoJpgPub)) fs.copyFileSync(logoJpgDoc, logoJpgPub);
+  if (!fs.existsSync(logoPngPub)) fs.copyFileSync(logoJpgDoc, logoPngPub);
+} else if (fs.existsSync(path.join(projectRoot, 'app-icon.png')) && !fs.existsSync(logoPngPub)) {
+  fs.copyFileSync(path.join(projectRoot, 'app-icon.png'), logoPngPub);
+}
+
 const dataDirectories = ['data', 'public/data'];
 const expectedBookCount = 66;
 const errors = [];

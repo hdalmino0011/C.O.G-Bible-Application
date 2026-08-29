@@ -17,23 +17,32 @@ function generateOfflineServiceWorker() {
         ? fs.readdirSync(assetsDir).map((file) => `./assets/${file}`)
         : [];
       const publicDataDir = path.resolve(projectRoot, 'public/data');
-      const bibleData = fs.existsSync(publicDataDir)
-        ? fs.readdirSync(publicDataDir).map((file) => `./data/${file}`)
+      const rawBibleFiles = fs.existsSync(publicDataDir)
+        ? fs.readdirSync(publicDataDir).filter((f) => f.endsWith('.json'))
         : [];
-      const precache = [
-        './',
-        './index.html',
-        './app-icon-192.png',
-        './app-icon.png',
-        './app-icon-maskable.png',
-        './logo.jpg',
-        './logo.png',
-        './manifest.json',
-        './404.html',
-        './.nojekyll',
-        ...bibleData,
-        ...builtAssets,
-      ];
+      const bibleData = rawBibleFiles.flatMap((file) => [
+        `./data/${file}`,
+        `data/${file}`,
+        `./data/${encodeURIComponent(file)}`,
+        `data/${encodeURIComponent(file)}`
+      ]);
+      const precache = Array.from(
+        new Set([
+          './',
+          'index.html',
+          './index.html',
+          './app-icon-192.png',
+          './app-icon.png',
+          './app-icon-maskable.png',
+          './logo.jpg',
+          './logo.png',
+          './manifest.json',
+          './404.html',
+          './.nojekyll',
+          ...bibleData,
+          ...builtAssets,
+        ])
+      );
       const swSrc = path.resolve(projectRoot, 'public/sw.js');
       if (fs.existsSync(swSrc)) {
         const serviceWorker = fs.readFileSync(swSrc, 'utf8').replace('__PRECACHE_ASSETS_LIST__', JSON.stringify(precache, null, 2));
