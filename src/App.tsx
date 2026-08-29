@@ -54,6 +54,7 @@ import {
 } from './utils/offlineDb';
 
 import { BIBLE_BOOKS, normalizeBookName } from './data/books';
+import { BOOK_LOADERS } from './data/bookModules';
 import { getRandomDailyVerse } from './data/dailyVerses';
 import { sendDailyVerseNotification } from './utils/notifications';
 
@@ -130,7 +131,11 @@ export default function App() {
     return Array.from(new Set(urls));
   };
 
-  // Robust book loader: IndexedDB first (zero network lag/100% offline), then Cache/Fetch fallback
+  // Multi-tiered ultra-reliable book loader:
+  // 1. In-memory state cache
+  // 2. Local IndexedDB on device disk (0ms offline persistence)
+  // 3. Bundled ES module chunk (100% offline self-contained package)
+  // 4. Candidate static asset URLs (Cache-First / Service Worker)
   const loadSingleBook = useCallback(async (bookName: string): Promise<BookChapters | null> => {
     if (!bookName) return null;
 
@@ -142,10 +147,25 @@ export default function App() {
         return dbContent;
       }
     } catch {
-      // Continue to fetch
+      // Continue to bundled loader
     }
 
-    // 2. Fetch from candidate URLs (Cache or Network)
+    // 2. Load from compiled offline ES module package
+    if (BOOK_LOADERS[bookName]) {
+      try {
+        const mod = await BOOK_LOADERS[bookName]();
+        const content = (mod && (mod.default || mod)) as BookChapters;
+        if (content && typeof content === 'object' && Object.keys(content).length > 0) {
+          setBibleData(prev => ({ ...prev, [bookName]: content }));
+          saveBookToIndexedDB(bookName, content).catch(() => {});
+          return content;
+        }
+      } catch (modErr) {
+        console.warn(`[Module Loader] Fallback to asset URL for ${bookName}:`, modErr);
+      }
+    }
+
+    // 3. Fetch from candidate asset URLs (Service Worker Cache / Network)
     const urls = getBookCandidateUrls(bookName);
 
     for (let i = 0; i < urls.length; i++) {
@@ -182,7 +202,7 @@ export default function App() {
     return null;
   }, []);
 
-  // 1. Initial startup: Load active book immediately from phone files, then background cache all 66 books
+  // 1. Initial startup: Load active book immediately, then rapidly unpack & persist all 66 books to phone storage
   useEffect(() => {
     let isCancelled = false;
 
@@ -196,17 +216,20 @@ export default function App() {
         setCurrentChapter(initialChapterNum);
       }
 
-      // Step 1: Load the active book right away from local DB or cache
+      // Step 1: Load the active book right away from local DB or bundled modules
       await loadSingleBook(initialBookName);
       if (!isCancelled) {
         setIsLoadingBible(false);
       }
 
-      // Step 2: Background populate all remaining books into phone storage
+      // Step 2: Background unpack and persist all remaining 65 books into phone storage
       const remainingBooks = BIBLE_BOOKS.filter(b => b.name !== initialBookName);
-      for (const book of remainingBooks) {
+      const batchSize = 6;
+      for (let i = 0; i < remainingBooks.length; i += batchSize) {
         if (isCancelled) break;
-        await loadSingleBook(book.name);
+        const batch = remainingBooks.slice(i, i + batchSize);
+        await Promise.allSettled(batch.map(b => loadSingleBook(b.name)));
+        await new Promise(r => setTimeout(r, 40));
       }
     }
 

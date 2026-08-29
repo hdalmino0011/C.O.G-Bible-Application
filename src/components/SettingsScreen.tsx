@@ -12,6 +12,7 @@ import {
 import { AppTheme, BibleData, FontFamily, FontSize, UserPreferences } from '../types';
 import { getNotificationPermissionStatus, requestNotificationPermission, sendDailyVerseNotification, isNotificationSupported } from '../utils/notifications';
 import { getRandomDailyVerse } from '../data/dailyVerses';
+import { EMBEDDED_LOGO_DATA_URI } from '../data/logoAsset';
 
 interface SettingsScreenProps {
   preferences: UserPreferences;
@@ -236,7 +237,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
       <div className="bg-white dark:bg-[#142036] border border-[#E2DED2] dark:border-[#22314E] rounded-2xl p-5 shadow-xs space-y-4">
         <div className="flex items-center gap-3 pb-3 border-b border-gray-100 dark:border-[#22314E]">
           <img
-            src="./logo.png"
+            src={EMBEDDED_LOGO_DATA_URI}
             alt="The Church of God Seal"
             className="w-14 h-14 rounded-full border-2 border-[#C9A227] shadow-md object-contain bg-[#142748] p-1 flex-shrink-0"
             referrerPolicy="no-referrer"
@@ -245,9 +246,9 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
               if (!target.dataset.triedJpg) {
                 target.dataset.triedJpg = 'true';
                 target.src = './logo.jpg';
-              } else if (!target.dataset.triedIcon) {
-                target.dataset.triedIcon = 'true';
-                target.src = './app-icon.png';
+              } else if (!target.dataset.triedPng) {
+                target.dataset.triedPng = 'true';
+                target.src = './logo.png';
               }
             }}
           />

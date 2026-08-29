@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
+import { EMBEDDED_LOGO_DATA_URI } from '../data/logoAsset';
 
 interface SplashProps {
   onComplete: () => void;
@@ -43,7 +44,7 @@ export const Splash: React.FC<SplashProps> = ({ onComplete }) => {
             <div className="relative w-44 h-44 sm:w-52 sm:h-52 mb-6 flex items-center justify-center">
               <div className="absolute inset-0 rounded-full bg-[#C9A227]/20 blur-xl animate-pulse" />
               <img
-                src="./logo.png"
+                src={EMBEDDED_LOGO_DATA_URI}
                 alt="COG (T.J.R) Bible Seal"
                 className="relative w-full h-full object-contain rounded-full border-2 border-[#E4C765] shadow-2xl p-2 bg-[#142748]/80"
                 referrerPolicy="no-referrer"
@@ -52,9 +53,9 @@ export const Splash: React.FC<SplashProps> = ({ onComplete }) => {
                   if (!target.dataset.triedJpg) {
                     target.dataset.triedJpg = 'true';
                     target.src = './logo.jpg';
-                  } else if (!target.dataset.triedIcon) {
-                    target.dataset.triedIcon = 'true';
-                    target.src = './app-icon.png';
+                  } else if (!target.dataset.triedPng) {
+                    target.dataset.triedPng = 'true';
+                    target.src = './logo.png';
                   }
                 }}
               />

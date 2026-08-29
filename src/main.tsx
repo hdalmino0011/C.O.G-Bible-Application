@@ -18,13 +18,20 @@ function keepPortraitOrientation() {
   });
 }
 
-// Register the service worker only in production builds so dev preview is not hijacked.
+// Register the service worker in production builds so full offline PWA is enabled.
 if ('serviceWorker' in navigator) {
   if (import.meta.env.PROD) {
     window.addEventListener('load', () => {
-      navigator.serviceWorker.register('./sw.js', {updateViaCache: 'none'}).catch((err) => {
-        console.log('SW registration error: ', err);
-      });
+      try {
+        const swUrl = new URL('sw.js', window.location.href).href;
+        navigator.serviceWorker.register(swUrl, { updateViaCache: 'none' }).catch(() => {
+          navigator.serviceWorker.register('./sw.js', { updateViaCache: 'none' }).catch((err) => {
+            console.log('SW registration error: ', err);
+          });
+        });
+      } catch {
+        navigator.serviceWorker.register('./sw.js', { updateViaCache: 'none' }).catch(() => {});
+      }
       keepPortraitOrientation();
     });
   } else {

@@ -1,6 +1,7 @@
 import React from 'react';
 import { Search, Bookmark as BookmarkIcon, Columns } from 'lucide-react';
 import { ReadingLayout, ScreenType } from '../types';
+import { EMBEDDED_LOGO_DATA_URI } from '../data/logoAsset';
 
 interface HeaderProps {
   currentScreen: ScreenType;
@@ -56,7 +57,7 @@ export const Header: React.FC<HeaderProps> = ({
           aria-label="COG Logo"
         >
           <img
-            src="./logo.png"
+            src={EMBEDDED_LOGO_DATA_URI}
             alt="COG Logo"
             className="w-full h-full object-cover"
             referrerPolicy="no-referrer"
@@ -65,9 +66,9 @@ export const Header: React.FC<HeaderProps> = ({
               if (!target.dataset.triedJpg) {
                 target.dataset.triedJpg = 'true';
                 target.src = './logo.jpg';
-              } else if (!target.dataset.triedIcon) {
-                target.dataset.triedIcon = 'true';
-                target.src = './app-icon.png';
+              } else if (!target.dataset.triedPng) {
+                target.dataset.triedPng = 'true';
+                target.src = './logo.png';
               }
             }}
           />

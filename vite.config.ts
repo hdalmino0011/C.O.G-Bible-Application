@@ -14,7 +14,7 @@ function generateOfflineServiceWorker() {
       if (!fs.existsSync(distDir)) return;
       const assetsDir = path.join(distDir, 'assets');
       const builtAssets = fs.existsSync(assetsDir)
-        ? fs.readdirSync(assetsDir).map((file) => `./assets/${file}`)
+        ? fs.readdirSync(assetsDir).flatMap((file) => [`./assets/${file}`, `assets/${file}`])
         : [];
       const publicDataDir = path.resolve(projectRoot, 'public/data');
       const rawBibleFiles = fs.existsSync(publicDataDir)

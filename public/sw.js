@@ -1,4 +1,4 @@
-const CACHE_NAME = 'cog-bible-offline-v5.0.0';
+const CACHE_NAME = 'cog-bible-offline-v6.0.0';
 const STATIC_ASSETS = typeof __PRECACHE_ASSETS_LIST__ !== 'undefined' && Array.isArray(__PRECACHE_ASSETS_LIST__)
   ? __PRECACHE_ASSETS_LIST__
   : [];
@@ -55,7 +55,7 @@ self.addEventListener('activate', (event) => {
   );
 });
 
-// Helper to look up a request in cache across URL variants (encoded, decoded, relative path)
+// Helper to look up a request in cache across URL variants (encoded, decoded, relative path, filename)
 async function matchCacheFlexible(request) {
   const cache = await caches.open(CACHE_NAME);
   
@@ -72,14 +72,22 @@ async function matchCacheFlexible(request) {
     if (matched && matched.status === 200) return matched;
   } catch {}
 
-  // 3. Match by filename / suffix (e.g. "Genesis.json" or "data/Genesis.json")
+  // 3. Match by pathname or filename suffix (e.g. "Genesis.json" or "data/Genesis.json" or "assets/...")
   try {
     const parsed = new URL(urlStr, self.location.origin);
     const pathname = parsed.pathname;
+    const filename = pathname.split('/').filter(Boolean).pop();
     const allKeys = await cache.keys();
+
     for (const key of allKeys) {
       const keyParsed = new URL(key.url, self.location.origin);
       if (keyParsed.pathname === pathname || decodeURIComponent(keyParsed.pathname) === decodeURIComponent(pathname)) {
+        const item = await cache.match(key);
+        if (item && item.status === 200) return item;
+      }
+      
+      const keyFilename = keyParsed.pathname.split('/').filter(Boolean).pop();
+      if (filename && keyFilename && (filename === keyFilename || decodeURIComponent(filename) === decodeURIComponent(keyFilename))) {
         const item = await cache.match(key);
         if (item && item.status === 200) return item;
       }

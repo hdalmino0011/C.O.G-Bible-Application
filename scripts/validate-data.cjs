@@ -113,4 +113,24 @@ if (errors.length > 0) {
   process.exit(1);
 }
 
-console.log('Bible data validated: 66 books in data and public/data.');
+// Generate src/data/bookModules.ts for dynamic offline compilation
+const books = fs.readdirSync(sourceDir).filter(f => f.endsWith('.json')).map(f => f.replace('.json', '')).sort();
+let bookModulesCode = 'import { BookChapters } from "../types";\n\nexport const BOOK_LOADERS: Record<string, () => Promise<{ default: BookChapters }>> = {\n';
+books.forEach(b => {
+  bookModulesCode += '  ' + JSON.stringify(b) + ': () => import(' + JSON.stringify('../../data/' + b + '.json') + ' as any),\n';
+});
+bookModulesCode += '};\n';
+fs.writeFileSync(path.join(projectRoot, 'src/data/bookModules.ts'), bookModulesCode, 'utf8');
+
+// Ensure logoAsset.ts exists
+const logoAssetPath = path.join(projectRoot, 'src/data/logoAsset.ts');
+if (!fs.existsSync(logoAssetPath)) {
+  const logoSrc = fs.existsSync(logoJpgDoc) ? logoJpgDoc : (fs.existsSync(logoJpgPub) ? logoJpgPub : path.join(projectRoot, 'app-icon.png'));
+  if (fs.existsSync(logoSrc)) {
+    const logoBuffer = fs.readFileSync(logoSrc);
+    const base64Logo = 'data:image/jpeg;base64,' + logoBuffer.toString('base64');
+    fs.writeFileSync(logoAssetPath, 'export const EMBEDDED_LOGO_DATA_URI = ' + JSON.stringify(base64Logo) + ';\n', 'utf8');
+  }
+}
+
+console.log('Bible data validated: 66 books in data and public/data. Offline modules and assets prepared.');
