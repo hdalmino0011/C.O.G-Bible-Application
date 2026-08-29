@@ -1,5 +1,5 @@
 import React from 'react';
-import { Search, Bookmark as BookmarkIcon, Columns, WifiOff, Download, CheckCircle2 } from 'lucide-react';
+import { Search, Bookmark as BookmarkIcon, Columns } from 'lucide-react';
 import { ReadingLayout, ScreenType } from '../types';
 
 interface HeaderProps {
@@ -13,10 +13,6 @@ interface HeaderProps {
   currentBook?: string;
   currentChapter?: number;
   onGoToBible?: () => void;
-  isOnline?: boolean;
-  offlineCount?: number;
-  totalBooks?: number;
-  isDownloadingOffline?: boolean;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -29,11 +25,7 @@ export const Header: React.FC<HeaderProps> = ({
   notesCount,
   currentBook,
   currentChapter,
-  onGoToBible,
-  isOnline = true,
-  offlineCount = 66,
-  totalBooks = 66,
-  isDownloadingOffline = false
+  onGoToBible
 }) => {
   const totalSaved = bookmarkCount + notesCount;
 
@@ -59,7 +51,7 @@ export const Header: React.FC<HeaderProps> = ({
       <div className="flex items-center gap-2.5 min-w-0">
         <button
           onClick={onGoToBible}
-          className="relative w-8 h-8 rounded-full overflow-hidden border border-[#E4C765]/80 shadow-sm flex-shrink-0 hover:scale-105 transition-transform"
+          className="relative w-8 h-8 rounded-full overflow-hidden border border-[#E4C765]/80 shadow-sm flex-shrink-0 hover:scale-105 transition-transform cursor-pointer"
           title="The Church of God (Truth, Justice, and Righteousness)"
           aria-label="COG Logo"
         >
@@ -86,18 +78,6 @@ export const Header: React.FC<HeaderProps> = ({
             <h1 className="font-serif text-base sm:text-lg font-bold tracking-tight text-white truncate">
               {getScreenTitle()}
             </h1>
-            {!isOnline && (
-              <span className="inline-flex items-center gap-1 text-[10px] font-sans font-semibold text-amber-300 bg-amber-950/60 border border-amber-400/40 px-1.5 py-0.5 rounded-full" title="Running offline from phone files">
-                <WifiOff className="w-2.5 h-2.5" />
-                Offline
-              </span>
-            )}
-            {isDownloadingOffline && (
-              <span className="inline-flex items-center gap-1 text-[10px] font-sans font-semibold text-[#E4C765] bg-[#E4C765]/20 px-1.5 py-0.5 rounded-full animate-pulse">
-                <Download className="w-2.5 h-2.5 animate-bounce" />
-                Saving...
-              </span>
-            )}
             {currentScreen === 'bible' && (
               <span className="hidden md:inline-block text-[11px] font-sans font-normal text-[#E4C765] bg-[#E4C765]/15 px-2 py-0.5 rounded-full">
                 CEB • KJV

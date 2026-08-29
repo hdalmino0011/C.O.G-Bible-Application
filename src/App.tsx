@@ -50,10 +50,7 @@ import {
 
 import {
   getBookFromIndexedDB,
-  saveBookToIndexedDB,
-  getStoredBooksCountFromIndexedDB,
-  getAllStoredBookNamesFromIndexedDB,
-  verifyAllBooksOffline
+  saveBookToIndexedDB
 } from './utils/offlineDb';
 
 import { BIBLE_BOOKS, normalizeBookName } from './data/books';
@@ -64,16 +61,6 @@ export default function App() {
   const [showSplash, setShowSplash] = useState(true);
   const [bibleData, setBibleData] = useState<BibleData>({});
   const [isLoadingBible, setIsLoadingBible] = useState(true);
-
-  // Offline Phone Storage State
-  const [isOnline, setIsOnline] = useState<boolean>(typeof navigator !== 'undefined' ? navigator.onLine : true);
-  const [offlineStoredCount, setOfflineStoredCount] = useState<number>(0);
-  const [isDownloadingOffline, setIsDownloadingOffline] = useState<boolean>(false);
-  const [offlineDownloadProgress, setOfflineDownloadProgress] = useState<number>(0);
-  const [currentDownloadingBook, setCurrentDownloadingBook] = useState<string>('');
-
-  // PWA Install Prompt
-  const [deferredInstallPrompt, setDeferredInstallPrompt] = useState<any>(null);
 
   // Navigation & Reading State
   const [currentScreen, setCurrentScreen] = useState<ScreenType>('bible');
@@ -114,39 +101,6 @@ export default function App() {
       setToastMessage(prev => (prev === msg ? null : prev));
     }, 2800);
   }, []);
-
-  // Network online/offline listener
-  useEffect(() => {
-    const handleOnline = () => {
-      setIsOnline(true);
-      showToast('Internet connection restored');
-    };
-    const handleOffline = () => {
-      setIsOnline(false);
-      showToast('Offline Mode: Reading from local phone files');
-    };
-
-    window.addEventListener('online', handleOnline);
-    window.addEventListener('offline', handleOffline);
-
-    // Initial check of local IndexedDB count
-    getStoredBooksCountFromIndexedDB().then(count => {
-      setOfflineStoredCount(count);
-    });
-
-    // Capture PWA install prompt
-    const handleBeforeInstall = (e: Event) => {
-      e.preventDefault();
-      setDeferredInstallPrompt(e);
-    };
-    window.addEventListener('beforeinstallprompt', handleBeforeInstall);
-
-    return () => {
-      window.removeEventListener('online', handleOnline);
-      window.removeEventListener('offline', handleOffline);
-      window.removeEventListener('beforeinstallprompt', handleBeforeInstall);
-    };
-  }, [showToast]);
 
   // Helper to construct candidate asset URLs regardless of deployment subdirectory
   const getBookCandidateUrls = (name: string) => {
@@ -217,9 +171,7 @@ export default function App() {
         if (bookContent && typeof bookContent === 'object' && Object.keys(bookContent).length > 0) {
           setBibleData(prev => ({ ...prev, [bookName]: bookContent }));
           // Persist in phone IndexedDB so it's permanently stored on device
-          saveBookToIndexedDB(bookName, bookContent).then(() => {
-            getStoredBooksCountFromIndexedDB().then(setOfflineStoredCount);
-          }).catch(() => {});
+          saveBookToIndexedDB(bookName, bookContent).catch(() => {});
           return bookContent;
         }
       } catch {
@@ -227,74 +179,10 @@ export default function App() {
       }
     }
 
-    console.warn(`Could not load scriptures for ${bookName}`);
     return null;
   }, []);
 
-  // Download & sync all 66 books to phone local storage
-  const handleDownloadAllOffline = useCallback(async () => {
-    if (isDownloadingOffline) return;
-
-    setIsDownloadingOffline(true);
-    setOfflineDownloadProgress(0);
-    showToast('Starting download of all 66 Bible books to phone storage...');
-
-    try {
-      const storedNames = new Set(await getAllStoredBookNamesFromIndexedDB());
-      const total = BIBLE_BOOKS.length;
-      let completed = storedNames.size;
-
-      for (let i = 0; i < total; i++) {
-        const book = BIBLE_BOOKS[i];
-        setCurrentDownloadingBook(book.name);
-        setOfflineDownloadProgress(((i + 1) / total) * 100);
-
-        if (!storedNames.has(book.name)) {
-          await loadSingleBook(book.name);
-          completed++;
-        }
-      }
-
-      const finalCount = await getStoredBooksCountFromIndexedDB();
-      setOfflineStoredCount(finalCount);
-      showToast(`100% Complete: All ${finalCount} books safely stored on your phone for offline use!`);
-    } catch (err) {
-      console.error('Offline download failed:', err);
-      showToast('Offline download encountered an issue. Please try again.');
-    } finally {
-      setIsDownloadingOffline(false);
-      setCurrentDownloadingBook('');
-    }
-  }, [isDownloadingOffline, loadSingleBook, showToast]);
-
-  // Verify offline storage
-  const handleVerifyOfflineStorage = useCallback(async () => {
-    const result = await verifyAllBooksOffline();
-    setOfflineStoredCount(result.presentCount);
-    if (result.missingCount === 0) {
-      showToast(`Verification Passed: All ${result.totalCount} books verified in phone database!`);
-    } else {
-      showToast(`${result.presentCount} of ${result.totalCount} books cached. Downloading missing books...`);
-      handleDownloadAllOffline();
-    }
-  }, [handleDownloadAllOffline, showToast]);
-
-  // Handle PWA installation
-  const handleInstallPWA = () => {
-    if (deferredInstallPrompt) {
-      deferredInstallPrompt.prompt();
-      deferredInstallPrompt.userChoice.then((choice: any) => {
-        if (choice.outcome === 'accepted') {
-          showToast('Bible app installed successfully to your phone!');
-          setDeferredInstallPrompt(null);
-        }
-      });
-    } else {
-      showToast('To install on iOS: Tap Share ➔ Add to Home Screen');
-    }
-  };
-
-  // 1. Initial startup: Load active book immediately from phone files, then background cache rest
+  // 1. Initial startup: Load active book immediately from phone files, then background cache all 66 books
   useEffect(() => {
     let isCancelled = false;
 
@@ -308,28 +196,17 @@ export default function App() {
         setCurrentChapter(initialChapterNum);
       }
 
-      // Step 1: Load the active book right away from local DB or network
+      // Step 1: Load the active book right away from local DB or cache
       await loadSingleBook(initialBookName);
       if (!isCancelled) {
         setIsLoadingBible(false);
       }
 
-      // Step 2: Query stored count
-      const count = await getStoredBooksCountFromIndexedDB();
-      if (!isCancelled) {
-        setOfflineStoredCount(count);
-      }
-
-      // Step 3: Background populate any missing books into phone storage
+      // Step 2: Background populate all remaining books into phone storage
       const remainingBooks = BIBLE_BOOKS.filter(b => b.name !== initialBookName);
       for (const book of remainingBooks) {
         if (isCancelled) break;
         await loadSingleBook(book.name);
-      }
-
-      const finalCount = await getStoredBooksCountFromIndexedDB();
-      if (!isCancelled) {
-        setOfflineStoredCount(finalCount);
       }
     }
 
@@ -681,10 +558,6 @@ export default function App() {
         currentBook={currentBook}
         currentChapter={currentChapter}
         onGoToBible={() => setCurrentScreen('bible')}
-        isOnline={isOnline}
-        offlineCount={offlineStoredCount}
-        totalBooks={BIBLE_BOOKS.length}
-        isDownloadingOffline={isDownloadingOffline}
       />
 
       {/* 3. Main Body Screen Views */}
@@ -750,16 +623,6 @@ export default function App() {
             onUpdatePreferences={handleUpdatePreferences}
             bibleData={bibleData}
             onShowToast={showToast}
-            isOnline={isOnline}
-            offlineCount={offlineStoredCount}
-            totalBooks={BIBLE_BOOKS.length}
-            isDownloadingOffline={isDownloadingOffline}
-            offlineDownloadProgress={offlineDownloadProgress}
-            currentDownloadingBook={currentDownloadingBook}
-            onDownloadAllOffline={handleDownloadAllOffline}
-            onVerifyOfflineStorage={handleVerifyOfflineStorage}
-            canInstallPWA={!!deferredInstallPrompt}
-            onInstallPWA={handleInstallPWA}
           />
         )}
       </main>

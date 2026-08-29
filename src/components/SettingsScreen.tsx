@@ -1,85 +1,33 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   Sun,
   Moon,
-  BookOpen,
   Droplets,
   Type,
   TextQuote,
   BellRing,
   Sparkles,
-  Smartphone,
-  HardDrive,
-  CheckCircle2,
-  Wifi,
-  WifiOff,
-  Download,
-  RefreshCw,
-  DownloadCloud,
-  ShieldCheck,
-  Info
+  Smartphone
 } from 'lucide-react';
 import { AppTheme, BibleData, FontFamily, FontSize, UserPreferences } from '../types';
 import { getNotificationPermissionStatus, requestNotificationPermission, sendDailyVerseNotification, isNotificationSupported } from '../utils/notifications';
 import { getRandomDailyVerse } from '../data/dailyVerses';
-import { getStorageEstimate } from '../utils/offlineDb';
 
 interface SettingsScreenProps {
   preferences: UserPreferences;
   onUpdatePreferences: (updated: Partial<UserPreferences>) => void;
   bibleData?: BibleData;
   onShowToast?: (msg: string) => void;
-  isOnline?: boolean;
-  offlineCount?: number;
-  totalBooks?: number;
-  isDownloadingOffline?: boolean;
-  offlineDownloadProgress?: number;
-  currentDownloadingBook?: string;
-  onDownloadAllOffline?: () => Promise<void>;
-  onVerifyOfflineStorage?: () => Promise<void>;
-  canInstallPWA?: boolean;
-  onInstallPWA?: () => void;
 }
 
 export const SettingsScreen: React.FC<SettingsScreenProps> = ({
   preferences,
   onUpdatePreferences,
   bibleData,
-  onShowToast,
-  isOnline = true,
-  offlineCount = 66,
-  totalBooks = 66,
-  isDownloadingOffline = false,
-  offlineDownloadProgress = 0,
-  currentDownloadingBook = '',
-  onDownloadAllOffline,
-  onVerifyOfflineStorage,
-  canInstallPWA = false,
-  onInstallPWA
+  onShowToast
 }) => {
   const [isTestingNotification, setIsTestingNotification] = useState(false);
   const [permStatus, setPermStatus] = useState(getNotificationPermissionStatus());
-  const [storageUsage, setStorageUsage] = useState<{ usageFormatted: string; quotaFormatted: string; percent: number }>({
-    usageFormatted: '~10.4 MB',
-    quotaFormatted: 'Device Storage',
-    percent: 1
-  });
-  const [isVerifying, setIsVerifying] = useState(false);
-  const [verificationResult, setVerificationResult] = useState<string | null>(null);
-
-  useEffect(() => {
-    getStorageEstimate().then(setStorageUsage);
-  }, [offlineCount]);
-
-  const handleVerify = async () => {
-    if (onVerifyOfflineStorage) {
-      setIsVerifying(true);
-      await onVerifyOfflineStorage();
-      setIsVerifying(false);
-      setVerificationResult(`All ${offlineCount} of ${totalBooks} books verified in phone database!`);
-      setTimeout(() => setVerificationResult(null), 5000);
-    }
-  };
 
   const themes: Array<{ id: AppTheme; label: string; icon: React.ReactNode }> = [
     {
@@ -145,155 +93,8 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
     }
   };
 
-  const isFullyCached = offlineCount >= totalBooks;
-
   return (
     <div className="flex-1 overflow-y-auto px-4 py-5 max-w-2xl mx-auto w-full pb-28 space-y-6">
-      {/* 1. Offline Phone Storage & Installation Status */}
-      <div className="bg-white dark:bg-[#142036] border border-[#E2DED2] dark:border-[#22314E] rounded-2xl p-5 shadow-xs space-y-4">
-        <div className="flex items-start justify-between gap-3 pb-3 border-b border-gray-100 dark:border-[#22314E]">
-          <div className="flex items-center gap-2.5">
-            <div className={`p-2.5 rounded-xl ${isFullyCached ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400' : 'bg-amber-500/15 text-amber-600 dark:text-amber-400'}`}>
-              <HardDrive className="w-5 h-5" />
-            </div>
-            <div>
-              <h3 className="font-serif font-bold text-base flex items-center gap-2" style={{ color: 'var(--ink)' }}>
-                Offline Phone Storage
-                {isFullyCached && (
-                  <span className="inline-flex items-center gap-1 text-[11px] font-sans font-semibold text-emerald-700 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-950/60 px-2 py-0.5 rounded-full">
-                    <CheckCircle2 className="w-3 h-3 text-emerald-600" />
-                    100% Offline Ready
-                  </span>
-                )}
-              </h3>
-              <p className="text-xs text-gray-500 dark:text-gray-400">
-                All 66 books, dual language text, quiz, and dictionary stored on your device.
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {/* Network & Local Storage Stats Grid */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
-          <div className="p-3 rounded-xl bg-gray-50 dark:bg-slate-800/60 border border-gray-100 dark:border-[#22314E]">
-            <div className="text-[10px] uppercase font-bold text-gray-400">Network State</div>
-            <div className="flex items-center gap-1.5 mt-1">
-              {isOnline ? (
-                <>
-                  <Wifi className="w-4 h-4 text-emerald-500" />
-                  <span className="text-xs font-bold text-gray-800 dark:text-gray-200">Online</span>
-                </>
-              ) : (
-                <>
-                  <WifiOff className="w-4 h-4 text-amber-500" />
-                  <span className="text-xs font-bold text-amber-600 dark:text-amber-400">Offline Mode</span>
-                </>
-              )}
-            </div>
-          </div>
-
-          <div className="p-3 rounded-xl bg-gray-50 dark:bg-slate-800/60 border border-gray-100 dark:border-[#22314E]">
-            <div className="text-[10px] uppercase font-bold text-gray-400">Cached Books</div>
-            <div className="text-xs font-bold text-[#C9A227] mt-1">
-              {offlineCount} of {totalBooks} Books
-            </div>
-          </div>
-
-          <div className="p-3 rounded-xl bg-gray-50 dark:bg-slate-800/60 border border-gray-100 dark:border-[#22314E] col-span-2 sm:col-span-1">
-            <div className="text-[10px] uppercase font-bold text-gray-400">Storage Used</div>
-            <div className="text-xs font-bold text-gray-800 dark:text-gray-200 mt-1">
-              {storageUsage.usageFormatted}
-            </div>
-          </div>
-        </div>
-
-        {/* Progress bar if actively downloading packages */}
-        {isDownloadingOffline && (
-          <div className="space-y-1.5 p-3.5 rounded-xl bg-[#C9A227]/10 border border-[#C9A227]/30">
-            <div className="flex justify-between text-xs font-bold text-[#0E1B33] dark:text-[#E4C765]">
-              <span className="flex items-center gap-1.5">
-                <DownloadCloud className="w-3.5 h-3.5 animate-bounce" />
-                Downloading scriptures for offline phone use...
-              </span>
-              <span>{Math.round(offlineDownloadProgress)}%</span>
-            </div>
-            {currentDownloadingBook && (
-              <p className="text-[11px] text-gray-600 dark:text-gray-300 italic">
-                Saving: {currentDownloadingBook}
-              </p>
-            )}
-            <div className="w-full bg-gray-200 dark:bg-slate-700 h-2 rounded-full overflow-hidden">
-              <div
-                className="bg-[#C9A227] h-full transition-all duration-200"
-                style={{ width: `${Math.max(5, offlineDownloadProgress)}%` }}
-              />
-            </div>
-          </div>
-        )}
-
-        {verificationResult && (
-          <div className="p-3 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-700 dark:text-emerald-300 text-xs font-semibold flex items-center gap-2">
-            <ShieldCheck className="w-4 h-4 shrink-0" />
-            <span>{verificationResult}</span>
-          </div>
-        )}
-
-        {/* Action Buttons */}
-        <div className="flex flex-wrap items-center gap-2 pt-1">
-          <button
-            onClick={() => onDownloadAllOffline?.()}
-            disabled={isDownloadingOffline}
-            className="flex-1 min-w-[180px] py-2.5 px-4 rounded-xl bg-[#1B3A6B] dark:bg-[#C9A227] text-white dark:text-[#0E1B33] font-bold text-xs hover:opacity-90 active:scale-95 transition-all shadow-xs flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
-          >
-            {isDownloadingOffline ? (
-              <>
-                <RefreshCw className="w-4 h-4 animate-spin" />
-                Saving to Phone Files...
-              </>
-            ) : (
-              <>
-                <Download className="w-4 h-4" />
-                {isFullyCached ? 'Re-Sync Offline Package' : 'Download All Offline Data'}
-              </>
-            )}
-          </button>
-
-          <button
-            onClick={handleVerify}
-            disabled={isVerifying}
-            className="py-2.5 px-3.5 rounded-xl border border-gray-200 dark:border-[#22314E] bg-gray-50 dark:bg-slate-800 text-gray-700 dark:text-gray-200 font-semibold text-xs hover:bg-gray-100 dark:hover:bg-slate-700 active:scale-95 transition-all flex items-center gap-1.5 cursor-pointer"
-          >
-            <ShieldCheck className="w-4 h-4 text-[#C9A227]" />
-            {isVerifying ? 'Verifying...' : 'Verify Offline Files'}
-          </button>
-        </div>
-
-        {/* PWA Phone Installation Prompt */}
-        {canInstallPWA && onInstallPWA && (
-          <div className="pt-3 border-t border-gray-100 dark:border-[#22314E] flex items-center justify-between gap-3">
-            <div className="flex items-center gap-2">
-              <Smartphone className="w-4 h-4 text-[#C9A227]" />
-              <span className="text-xs font-semibold text-gray-800 dark:text-gray-200">
-                Install App on Phone Home Screen
-              </span>
-            </div>
-            <button
-              onClick={onInstallPWA}
-              className="py-1.5 px-3 rounded-lg bg-[#C9A227] text-white font-bold text-xs hover:bg-[#B38F1E] active:scale-95 transition-all shadow-xs cursor-pointer"
-            >
-              Install App
-            </button>
-          </div>
-        )}
-
-        <div className="flex items-start gap-1.5 text-[11px] text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-slate-800/40 p-2.5 rounded-xl">
-          <Info className="w-3.5 h-3.5 text-[#C9A227] mt-0.5 shrink-0" />
-          <span>
-            Once installed, this Bible app operates <strong>100% offline</strong> without internet or cellular data. All bookmarks, notes, highlights, and quiz stats remain safely on your phone.
-          </span>
-        </div>
-      </div>
-
       {/* Visual Theme */}
       <div className="bg-white dark:bg-[#142036] border border-[#E2DED2] dark:border-[#22314E] rounded-2xl p-5 shadow-xs space-y-3">
         <h3 className="font-serif font-bold text-base flex items-center gap-2" style={{ color: 'var(--ink)' }}>
