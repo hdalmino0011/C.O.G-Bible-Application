@@ -12,10 +12,10 @@ if (fs.existsSync(sourceDir)) {
   }
   const sourceFiles = fs.readdirSync(sourceDir).filter((file) => file.endsWith('.json'));
   for (const file of sourceFiles) {
+    const srcFile = path.join(sourceDir, file);
     const destFile = path.join(publicDir, file);
-    if (!fs.existsSync(destFile)) {
-      fs.copyFileSync(path.join(sourceDir, file), destFile);
-    }
+    // Always sync source file to public/data to keep them identical
+    fs.copyFileSync(srcFile, destFile);
   }
 }
 
@@ -65,7 +65,18 @@ function validateDirectory(relativeDirectory) {
   for (const file of files) {
     const filePath = path.join(directory, file);
     try {
-      const book = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+      let rawContent = fs.readFileSync(filePath, 'utf8');
+      let book;
+      try {
+        book = JSON.parse(rawContent);
+      } catch (parseErr) {
+        // Attempt to clean control characters (0x00 to 0x1F except \n, \r, \t)
+        const cleaned = rawContent.replace(/[\x00-\x09\x0B\x0C\x0E-\x1F]/g, '');
+        book = JSON.parse(cleaned);
+        // Write back sanitized clean JSON
+        fs.writeFileSync(filePath, JSON.stringify(book), 'utf8');
+      }
+
       if (!book || typeof book !== 'object' || Array.isArray(book) || Object.keys(book).length === 0) {
         errors.push(relativeDirectory + '/' + file + ' is not a chapter object');
         continue;
