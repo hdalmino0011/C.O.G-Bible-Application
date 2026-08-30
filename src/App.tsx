@@ -51,8 +51,9 @@ import {
 import {
   getBookFromIndexedDB,
   saveBookToIndexedDB,
-  getAllStoredBookNamesFromIndexedDB,
   getOfflineStorageSummary,
+  verifyAllBooksOffline,
+  isValidBookChapters,
   requestPersistentStorage,
   saveBookToCacheStorage
 } from './utils/offlineDb';
@@ -117,6 +118,8 @@ export default function App() {
     currentBook: ''
   });
   const [isFullyDownloaded, setIsFullyDownloaded] = useState(false);
+  const [failedDownloadBooks, setFailedDownloadBooks] = useState<string[]>([]);
+  const [downloadError, setDownloadError] = useState<string | null>(null);
 
   // Helper to construct candidate asset URLs regardless of deployment subdirectory
   const getBookCandidateUrls = (name: string) => {
@@ -157,7 +160,7 @@ export default function App() {
     // 1. Check local IndexedDB phone storage first
     try {
       const dbContent = await getBookFromIndexedDB(bookName);
-      if (dbContent && typeof dbContent === 'object' && Object.keys(dbContent).length > 0) {
+      if (isValidBookChapters(dbContent)) {
         setBibleData(prev => ({ ...prev, [bookName]: dbContent }));
         return dbContent;
       }
@@ -170,7 +173,7 @@ export default function App() {
       try {
         const mod = await BOOK_LOADERS[bookName]();
         const content = (mod && (mod.default || mod)) as BookChapters;
-        if (content && typeof content === 'object' && Object.keys(content).length > 0) {
+        if (isValidBookChapters(content)) {
           setBibleData(prev => ({ ...prev, [bookName]: content }));
           saveBookToIndexedDB(bookName, content).catch(() => {});
           saveBookToCacheStorage(bookName, content).catch(() => {});
@@ -204,7 +207,7 @@ export default function App() {
         if (!trimmed.startsWith('{')) continue;
 
         let bookContent = JSON.parse(trimmed) as BookChapters;
-        if (bookContent && typeof bookContent === 'object' && Object.keys(bookContent).length > 0) {
+        if (isValidBookChapters(bookContent)) {
           setBibleData(prev => ({ ...prev, [bookName]: bookContent }));
           // Persist in phone IndexedDB & CacheStorage so it's permanently stored on device
           saveBookToIndexedDB(bookName, bookContent).catch(() => {});
@@ -252,9 +255,18 @@ export default function App() {
           setIsFullyDownloaded(allStored);
 
           // If not all books are in local storage, pop up modal on landing page after splash
-          const hasPrompted = sessionStorage.getItem('cog_offline_prompted');
+          let hasPrompted = false;
+          try {
+            hasPrompted = sessionStorage.getItem('cog_offline_prompted') === 'true';
+          } catch {
+            // Continue without session storage in privacy-restricted browsers.
+          }
           if (!allStored && !hasPrompted) {
-            sessionStorage.setItem('cog_offline_prompted', 'true');
+            try {
+              sessionStorage.setItem('cog_offline_prompted', 'true');
+            } catch {
+              // The prompt should still appear when session storage is unavailable.
+            }
             // Give brief moment for smooth splash transition
             setTimeout(() => {
               if (!isCancelled) {
@@ -278,55 +290,87 @@ export default function App() {
   // Dedicated one-tap Offline Package Downloader
   const handleDownloadFullPackage = useCallback(async () => {
     setIsDownloadingPackage(true);
-    let downloadedCount = 0;
-
-    // Request persistent storage from device OS
-    await requestPersistentStorage();
-
-    // Trigger Service Worker to precache all assets
-    if (typeof navigator !== 'undefined' && navigator.serviceWorker && navigator.serviceWorker.controller) {
-      navigator.serviceWorker.controller.postMessage({ type: 'CACHE_ALL_SCRIPTURES' });
-    }
+    setDownloadError(null);
+    setFailedDownloadBooks([]);
+    setIsFullyDownloaded(false);
+    setDownloadProgress({ current: 0, total: BIBLE_BOOKS.length, currentBook: '' });
+    localStorage.removeItem('cog_offline_package_installed');
 
     const downloadedBibleData: BibleData = {};
 
-    for (let i = 0; i < BIBLE_BOOKS.length; i++) {
-      const book = BIBLE_BOOKS[i];
-      setDownloadProgress({
-        current: downloadedCount,
-        total: BIBLE_BOOKS.length,
-        currentBook: book.name
-      });
+    try {
+      await requestPersistentStorage();
 
-      try {
-        const content = await loadSingleBook(book.name);
-        if (content) {
-          downloadedBibleData[book.name] = content;
-          await saveBookToIndexedDB(book.name, content);
-          await saveBookToCacheStorage(book.name, content);
+      // Let the service worker finish activating before asking it to warm its cache.
+      if (typeof navigator !== 'undefined' && 'serviceWorker' in navigator) {
+        try {
+          const registration = await Promise.race([
+            navigator.serviceWorker.ready,
+            new Promise<ServiceWorkerRegistration | null>(resolve => setTimeout(() => resolve(null), 1500))
+          ]);
+          const worker = registration?.active || navigator.serviceWorker.controller;
+          worker?.postMessage({ type: 'CACHE_ALL_SCRIPTURES' });
+        } catch {
+          // IndexedDB and bundled modules remain valid offline storage fallbacks.
         }
-      } catch (err) {
-        console.warn(`Error loading ${book.name}:`, err);
       }
 
-      downloadedCount++;
-      setDownloadProgress({
-        current: downloadedCount,
-        total: BIBLE_BOOKS.length,
-        currentBook: book.name
-      });
-      // Brief yield so browser UI and progress bar animate smoothly
-      await new Promise(r => setTimeout(r, 20));
+      for (let i = 0; i < BIBLE_BOOKS.length; i++) {
+        const book = BIBLE_BOOKS[i];
+        setDownloadProgress({ current: i, total: BIBLE_BOOKS.length, currentBook: book.name });
+
+        let content: BookChapters | null = null;
+        for (let attempt = 0; attempt < 3 && !content; attempt++) {
+          try {
+            content = await loadSingleBook(book.name);
+          } catch {
+            content = null;
+          }
+          if (!content && attempt < 2) {
+            await new Promise(resolve => setTimeout(resolve, 150 * (attempt + 1)));
+          }
+        }
+
+        if (content && isValidBookChapters(content)) {
+          downloadedBibleData[book.name] = content;
+          const indexedDbSaved = await saveBookToIndexedDB(book.name, content);
+          const cacheSaved = await saveBookToCacheStorage(book.name, content);
+          if (!indexedDbSaved && !cacheSaved) {
+            console.warn('[Offline Package] No persistent store accepted ' + book.name);
+          }
+        }
+
+        setDownloadProgress({ current: i + 1, total: BIBLE_BOOKS.length, currentBook: book.name });
+        // Yield to keep the progress UI responsive on phones.
+        await new Promise(resolve => setTimeout(resolve, 20));
+      }
+
+      setBibleData(prev => ({ ...prev, ...downloadedBibleData }));
+
+      // Never claim success based on loop iterations; verify every named book in storage.
+      const summary = await verifyAllBooksOffline();
+      setDownloadProgress({ current: BIBLE_BOOKS.length, total: BIBLE_BOOKS.length, currentBook: '' });
+      setFailedDownloadBooks(summary.missingBooks);
+
+      if (summary.missingCount === 0) {
+        localStorage.setItem('cog_offline_package_installed', 'true');
+        localStorage.setItem('cog_offline_installed_date', new Date().toISOString());
+        setIsFullyDownloaded(true);
+        showToast('All 66 books are saved for offline use.');
+      } else {
+        localStorage.removeItem('cog_offline_package_installed');
+        setDownloadError(summary.missingCount + ' book' + (summary.missingCount === 1 ? ' is' : 's are') + ' still missing. Please retry.');
+        showToast('Offline package incomplete: ' + summary.missingCount + ' book' + (summary.missingCount === 1 ? '' : 's') + ' need' + (summary.missingCount === 1 ? 's' : '') + ' another try.');
+      }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unexpected download error';
+      setIsFullyDownloaded(false);
+      setDownloadError('The offline package could not finish: ' + message);
+      showToast('Offline download stopped. Please retry.');
+    } finally {
+      setIsDownloadingPackage(false);
     }
-
-    setBibleData(prev => ({ ...prev, ...downloadedBibleData }));
-    localStorage.setItem('cog_offline_package_installed', 'true');
-    localStorage.setItem('cog_offline_installed_date', new Date().toISOString());
-
-    setIsDownloadingPackage(false);
-    setIsFullyDownloaded(true);
-    showToast('66 Books saved to device memory! App works 100% offline.');
-  }, [loadSingleBook, showToast]);
+  }, [loadSingleBook, showToast, verifyAllBooksOffline]);
 
   // 2. Apply theme & font classes to document body
   useEffect(() => {
@@ -747,6 +791,8 @@ export default function App() {
         isDownloading={isDownloadingPackage}
         downloadProgress={downloadProgress}
         isFullyDownloaded={isFullyDownloaded}
+        failedBooks={failedDownloadBooks}
+        downloadError={downloadError}
         onStartDownload={handleDownloadFullPackage}
       />
 
