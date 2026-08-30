@@ -54,7 +54,10 @@ function generateOfflineServiceWorker() {
       );
       const swSrc = path.resolve(projectRoot, 'public/sw.js');
       if (fs.existsSync(swSrc)) {
-        const serviceWorker = fs.readFileSync(swSrc, 'utf8').replace('__PRECACHE_ASSETS_LIST__', JSON.stringify(precache, null, 2));
+        const serviceWorker = fs.readFileSync(swSrc, 'utf8').replace(
+          'const PRECACHE_ASSETS = [];',
+          `const PRECACHE_ASSETS = ${JSON.stringify(precache, null, 2)};`
+        );
         fs.writeFileSync(path.join(distDir, 'sw.js'), serviceWorker);
       }
     },

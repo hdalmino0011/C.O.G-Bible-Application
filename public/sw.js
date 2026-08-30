@@ -100,9 +100,12 @@ const DEFAULT_STATIC_ASSETS = [
   ])
 ];
 
-const STATIC_ASSETS = typeof __PRECACHE_ASSETS_LIST__ !== 'undefined' && Array.isArray(__PRECACHE_ASSETS_LIST__) && __PRECACHE_ASSETS_LIST__.length > 0
-  ? Array.from(new Set([...__PRECACHE_ASSETS_LIST__, ...DEFAULT_STATIC_ASSETS]))
-  : DEFAULT_STATIC_ASSETS;
+// Injected during build by vite.config.ts
+const PRECACHE_ASSETS = [];
+
+const STATIC_ASSETS = Array.from(
+  new Set([...PRECACHE_ASSETS, ...DEFAULT_STATIC_ASSETS])
+);
 
 // Install event: Precache core assets
 self.addEventListener('install', (event) => {
