@@ -10,6 +10,8 @@ interface OfflinePackageModalProps {
   downloadProgress: { current: number; total: number; currentBook: string };
   isFullyDownloaded: boolean;
   onStartDownload: () => void;
+  failedBooks?: string[];
+  downloadError?: string | null;
 }
 
 export const OfflinePackageModal: React.FC<OfflinePackageModalProps> = ({
@@ -19,6 +21,8 @@ export const OfflinePackageModal: React.FC<OfflinePackageModalProps> = ({
   downloadProgress,
   isFullyDownloaded,
   onStartDownload,
+  failedBooks = [],
+  downloadError = null,
 }) => {
   if (!isOpen) return null;
 
@@ -79,6 +83,21 @@ export const OfflinePackageModal: React.FC<OfflinePackageModalProps> = ({
               : 'To guarantee that the COG Bible works anywhere on your phone with zero internet or cellular data, download and store the complete 66-book scripture package into your device memory.'}
           </p>
 
+          {downloadError && !isDownloading && !isFullyDownloaded && (
+            <div id="offline-download-error-box" className="my-4 p-4 rounded-2xl bg-red-50 dark:bg-red-950/30 border border-red-300 dark:border-red-800/60 flex items-start gap-3 text-left">
+              <AlertCircle className="w-5 h-5 text-red-600 dark:text-red-400 shrink-0 mt-0.5" />
+              <div className="min-w-0">
+                <div className="text-xs font-bold text-red-900 dark:text-red-200">Offline package incomplete</div>
+                <div className="text-[11px] text-red-700 dark:text-red-300 mt-1">{downloadError}</div>
+                {failedBooks.length > 0 && (
+                  <div className="text-[11px] text-red-700 dark:text-red-300 mt-1 break-words">
+                    Missing: {failedBooks.slice(0, 5).join(', ')}{failedBooks.length > 5 ? '…' : ''}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
           {/* Status / Progress Display */}
           {isDownloading ? (
             <div id="offline-download-progress-box" className="space-y-4 my-4 p-4 rounded-2xl bg-amber-50/70 dark:bg-[#1A2C4B]/60 border border-[#E4C765]/40 text-left">
@@ -119,7 +138,7 @@ export const OfflinePackageModal: React.FC<OfflinePackageModalProps> = ({
             <div className="my-4 p-3.5 rounded-2xl bg-gray-50 dark:bg-gray-800/60 border border-gray-200 dark:border-gray-700/60 text-left space-y-2">
               <div className="flex items-center gap-2 text-xs font-medium text-gray-700 dark:text-gray-200">
                 <HardDrive className="w-4 h-4 text-[#C9A227]" />
-                <span>Package Size: <strong>~7 MB total</strong></span>
+                <span>Package Size: <strong>~12 MB total</strong></span>
               </div>
               <div className="flex items-center gap-2 text-xs font-medium text-gray-700 dark:text-gray-200">
                 <ShieldCheck className="w-4 h-4 text-[#C9A227]" />
