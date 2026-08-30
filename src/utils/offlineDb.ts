@@ -119,7 +119,7 @@ async function getValidStoredBookNames(): Promise<Set<string>> {
 
 async function getCachedBookNames(): Promise<Set<string>> {
   const names = new Set<string>();
-  if (typeof caches === 'undefined') return names;
+  if (typeof caches === 'undefined' || typeof Response === 'undefined') return names;
 
   try {
     const cacheNames = (await caches.keys()).filter(name => name.startsWith(CACHE_PREFIX));
@@ -129,12 +129,18 @@ async function getCachedBookNames(): Promise<Set<string>> {
         try {
           const url = new URL(request.url);
           const fileName = decodeURIComponent(url.pathname.split('/').filter(Boolean).pop() || '');
-          if (fileName.endsWith('.json')) {
-            const bookName = fileName.slice(0, -5);
-            if (KNOWN_BOOK_NAMES.has(bookName)) names.add(bookName);
-          }
+          if (!fileName.endsWith('.json')) continue;
+          const bookName = fileName.slice(0, -5);
+          if (!KNOWN_BOOK_NAMES.has(bookName) || names.has(bookName)) continue;
+
+          const response = await cache.match(request, { ignoreSearch: true });
+          if (!response || response.status !== 200) continue;
+          const contentType = response.headers.get('content-type') || '';
+          if (contentType.includes('text/html')) continue;
+          const data = await response.clone().json();
+          if (isValidBookChapters(data)) names.add(bookName);
         } catch {
-          // Ignore malformed cache keys.
+          // Ignore malformed or incomplete cache entries.
         }
       }
     }
