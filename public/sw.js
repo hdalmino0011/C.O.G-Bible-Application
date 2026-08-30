@@ -1,44 +1,170 @@
-const CACHE_NAME = 'cog-bible-offline-v6.0.0';
-const STATIC_ASSETS = typeof __PRECACHE_ASSETS_LIST__ !== 'undefined' && Array.isArray(__PRECACHE_ASSETS_LIST__)
-  ? __PRECACHE_ASSETS_LIST__
-  : [];
+const CACHE_NAME = 'cog-bible-offline-v7.0.0';
 
-// Install: Pre-cache all essential application assets and Bible database packages
+const DEFAULT_BOOK_FILES = [
+  '1 Chronicles.json',
+  '1 Corinthians.json',
+  '1 John.json',
+  '1 Kings.json',
+  '1 Peter.json',
+  '1 Samuel.json',
+  '1 Thessalonians.json',
+  '1 Timothy.json',
+  '2 Chronicles.json',
+  '2 Corinthians.json',
+  '2 John.json',
+  '2 Kings.json',
+  '2 Peter.json',
+  '2 Samuel.json',
+  '2 Thessalonians.json',
+  '2 Timothy.json',
+  '3 John.json',
+  'Acts.json',
+  'Amos.json',
+  'Colossians.json',
+  'Daniel.json',
+  'Deuteronomy.json',
+  'Ecclesiastes.json',
+  'Ephesians.json',
+  'Esther.json',
+  'Exodus.json',
+  'Ezekiel.json',
+  'Ezra.json',
+  'Galatians.json',
+  'Genesis.json',
+  'Habakkuk.json',
+  'Haggai.json',
+  'Hebrews.json',
+  'Hosea.json',
+  'Isaiah.json',
+  'James.json',
+  'Jeremiah.json',
+  'Job.json',
+  'Joel.json',
+  'John.json',
+  'Jonah.json',
+  'Joshua.json',
+  'Jude.json',
+  'Judges.json',
+  'Lamentations.json',
+  'Leviticus.json',
+  'Luke.json',
+  'Malachi.json',
+  'Mark.json',
+  'Matthew.json',
+  'Micah.json',
+  'Nahum.json',
+  'Nehemiah.json',
+  'Numbers.json',
+  'Obadiah.json',
+  'Philemon.json',
+  'Philippians.json',
+  'Proverbs.json',
+  'Psalms.json',
+  'Revelation.json',
+  'Romans.json',
+  'Ruth.json',
+  'Song of Solomon.json',
+  'Titus.json',
+  'Zechariah.json',
+  'Zephaniah.json'
+];
+
+const DEFAULT_STATIC_ASSETS = [
+  './',
+  '',
+  'index.html',
+  './index.html',
+  'manifest.json',
+  './manifest.json',
+  'logo.png',
+  './logo.png',
+  'logo.jpg',
+  './logo.jpg',
+  'app-icon.png',
+  './app-icon.png',
+  'app-icon-192.png',
+  './app-icon-192.png',
+  'app-icon-maskable.png',
+  './app-icon-maskable.png',
+  '404.html',
+  './404.html',
+  '.nojekyll',
+  './.nojekyll',
+  ...DEFAULT_BOOK_FILES.flatMap(file => [
+    `./data/${file}`,
+    `data/${file}`,
+    `/data/${file}`,
+    `./data/${encodeURIComponent(file)}`,
+    `data/${encodeURIComponent(file)}`,
+    `/data/${encodeURIComponent(file)}`
+  ])
+];
+
+const STATIC_ASSETS = typeof __PRECACHE_ASSETS_LIST__ !== 'undefined' && Array.isArray(__PRECACHE_ASSETS_LIST__) && __PRECACHE_ASSETS_LIST__.length > 0
+  ? Array.from(new Set([...__PRECACHE_ASSETS_LIST__, ...DEFAULT_STATIC_ASSETS]))
+  : DEFAULT_STATIC_ASSETS;
+
+// Install event: Precache core assets
 self.addEventListener('install', (event) => {
   self.skipWaiting();
   event.waitUntil(
     caches.open(CACHE_NAME).then(async (cache) => {
-      if (Array.isArray(STATIC_ASSETS) && STATIC_ASSETS.length > 0) {
-        // Cache assets with fault tolerance (settled)
-        await Promise.allSettled(
-          STATIC_ASSETS.map(async (url) => {
-            try {
-              const res = await fetch(url, { cache: 'no-cache' });
-              if (res && res.status === 200) {
-                const ct = res.headers.get('content-type') || '';
-                // Don't cache HTML fallback as JSON data
-                if (url.endsWith('.json') && ct.includes('text/html')) {
-                  return;
-                }
-                await cache.put(url, res.clone());
+      // 1. First cache the critical shell (index.html, manifest, icons)
+      const criticalShell = [
+        './',
+        'index.html',
+        './index.html',
+        'manifest.json',
+        './manifest.json',
+        'logo.png',
+        './logo.png',
+        'logo.jpg',
+        './logo.jpg',
+        'app-icon.png',
+        './app-icon.png',
+        'app-icon-192.png',
+        './app-icon-192.png'
+      ];
 
-                // Also store with normalized / decoded URL if it has special characters or spaces
-                const decoded = decodeURIComponent(url);
-                if (decoded !== url) {
-                  await cache.put(decoded, res);
-                }
-              }
-            } catch (err) {
-              console.warn('[SW] Precache skip for asset:', url, err);
+      await Promise.allSettled(
+        criticalShell.map(async (url) => {
+          try {
+            const res = await fetch(url, { cache: 'reload' });
+            if (res && res.status === 200) {
+              await cache.put(url, res.clone());
             }
-          })
-        );
-      }
+          } catch (e) {
+            console.warn('[SW] Shell item precache error:', url, e);
+          }
+        })
+      );
+
+      // 2. Precache remaining assets in background
+      await Promise.allSettled(
+        STATIC_ASSETS.map(async (url) => {
+          try {
+            const res = await fetch(url, { cache: 'no-cache' });
+            if (res && res.status === 200) {
+              const ct = res.headers.get('content-type') || '';
+              if (url.endsWith('.json') && ct.includes('text/html')) {
+                return;
+              }
+              await cache.put(url, res.clone());
+              const decoded = decodeURIComponent(url);
+              if (decoded !== url) {
+                await cache.put(decoded, res.clone());
+              }
+            }
+          } catch (err) {
+            // Silently skip non-critical asset errors during install
+          }
+        })
+      );
     })
   );
 });
 
-// Activate: Purge older cache versions and take immediate control of clients
+// Activate event: Clean old caches and claim clients immediately
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys()
@@ -55,7 +181,7 @@ self.addEventListener('activate', (event) => {
   );
 });
 
-// Helper to look up a request in cache across URL variants (encoded, decoded, relative path, filename)
+// Helper to look up a request flexibly in Cache across URL variants
 async function matchCacheFlexible(request) {
   const cache = await caches.open(CACHE_NAME);
   
@@ -97,41 +223,51 @@ async function matchCacheFlexible(request) {
   return null;
 }
 
-// Fetch handler: Network-first for navigation, Cache-first for data & assets
+// Fetch handler: Complete offline resilience
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
 
   const requestUrl = event.request.url;
 
-  // 1. Navigation requests (HTML pages)
-  if (event.request.mode === 'navigate') {
+  // 1. HTML Navigation requests (Page loading & refresh)
+  if (event.request.mode === 'navigate' || event.request.destination === 'document') {
     event.respondWith(
       fetch(event.request)
         .then((networkRes) => {
           if (networkRes && networkRes.status === 200) {
             const copy = networkRes.clone();
-            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
+            caches.open(CACHE_NAME).then((cache) => {
+              cache.put(event.request, copy);
+              cache.put('./index.html', networkRes.clone());
+              cache.put('index.html', networkRes.clone());
+            });
           }
           return networkRes;
         })
         .catch(async () => {
+          // Offline fallback: Return cached HTML
           const cached = await matchCacheFlexible(event.request);
           if (cached) return cached;
           const indexHtml = await matchCacheFlexible('./index.html');
           if (indexHtml) return indexHtml;
           const root = await matchCacheFlexible('./');
           if (root) return root;
-          return new Response('Offline', { status: 503, headers: { 'Content-Type': 'text/plain' } });
+          const rootSlash = await matchCacheFlexible('/');
+          if (rootSlash) return rootSlash;
+          return new Response(
+            '<!DOCTYPE html><html><head><meta charset="utf-8"><title>COG Bible Offline</title></head><body><h2>Offline</h2><p>Please reopen when installed.</p></body></html>',
+            { headers: { 'Content-Type': 'text/html; charset=utf-8' } }
+          );
         })
     );
     return;
   }
 
-  // 2. Bible Data JSON & Static Assets (Cache-First with network fallback)
+  // 2. All Assets, JSON Data, Scripts, Styles & Images (Cache-First)
   event.respondWith(
     matchCacheFlexible(event.request).then(async (cachedResponse) => {
       if (cachedResponse) {
-        // Validate it's not a corrupted HTML fallback
+        // Guard against corrupted HTML fallbacks in JSON
         const ct = cachedResponse.headers.get('content-type') || '';
         if (requestUrl.endsWith('.json') && ct.includes('text/html')) {
           const cache = await caches.open(CACHE_NAME);
@@ -141,7 +277,7 @@ self.addEventListener('fetch', (event) => {
         }
       }
 
-      // Fetch from network and store in cache
+      // If not in cache, fetch from network and store in cache
       return fetch(event.request)
         .then((networkResponse) => {
           if (networkResponse && networkResponse.status === 200) {
@@ -161,24 +297,69 @@ self.addEventListener('fetch', (event) => {
           }
           return networkResponse;
         })
-        .catch(() => {
-          return new Response('{}', {
-            status: 404,
-            headers: { 'Content-Type': requestUrl.endsWith('.json') ? 'application/json' : 'text/plain' }
+        .catch(async () => {
+          // Network failed (Offline): Last-chance flexible cache search
+          const lastChance = await matchCacheFlexible(event.request);
+          if (lastChance) return lastChance;
+
+          if (requestUrl.endsWith('.json')) {
+            return new Response('{}', {
+              status: 404,
+              headers: { 'Content-Type': 'application/json' }
+            });
+          }
+
+          return new Response('Asset not found offline', {
+            status: 503,
+            headers: { 'Content-Type': 'text/plain' }
           });
         });
     })
   );
 });
 
-// Client Message Listener
+// Message Listener for explicit caching triggers from App
 self.addEventListener('message', (event) => {
   if (event.data && event.data.type === 'SKIP_WAITING') {
     self.skipWaiting();
   }
+
+  if (event.data && event.data.type === 'CACHE_ALL_SCRIPTURES') {
+    event.waitUntil(
+      caches.open(CACHE_NAME).then(async (cache) => {
+        let successCount = 0;
+        for (const bookFile of DEFAULT_BOOK_FILES) {
+          const urls = [
+            `./data/${bookFile}`,
+            `data/${bookFile}`,
+            `./data/${encodeURIComponent(bookFile)}`
+          ];
+          for (const u of urls) {
+            try {
+              const res = await fetch(u);
+              if (res && res.status === 200) {
+                const ct = res.headers.get('content-type') || '';
+                if (!ct.includes('text/html')) {
+                  await cache.put(u, res.clone());
+                  successCount++;
+                  break;
+                }
+              }
+            } catch {}
+          }
+        }
+        if (event.source && event.source.postMessage) {
+          event.source.postMessage({
+            type: 'CACHE_ALL_SCRIPTURES_DONE',
+            count: successCount
+          });
+        }
+      })
+    );
+  }
 });
 
-// Notification click event: focus app window and navigate to the bible verse
+// Notification click event
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
   const data = event.notification.data || {};
@@ -209,5 +390,3 @@ self.addEventListener('notificationclick', (event) => {
     })
   );
 });
-
-

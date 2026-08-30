@@ -18,29 +18,31 @@ function keepPortraitOrientation() {
   });
 }
 
-// Register the service worker in production builds so full offline PWA is enabled.
+// Register the service worker so full offline PWA is enabled anywhere (dev, preview, production).
 if ('serviceWorker' in navigator) {
-  if (import.meta.env.PROD) {
-    window.addEventListener('load', () => {
-      try {
-        const swUrl = new URL('sw.js', window.location.href).href;
-        navigator.serviceWorker.register(swUrl, { updateViaCache: 'none' }).catch(() => {
+  const registerSW = () => {
+    try {
+      const swUrl = new URL('sw.js', window.location.href).href;
+      navigator.serviceWorker.register(swUrl, { updateViaCache: 'none' })
+        .then((reg) => {
+          console.log('[PWA] ServiceWorker registered with scope:', reg.scope);
+          reg.update().catch(() => {});
+        })
+        .catch(() => {
           navigator.serviceWorker.register('./sw.js', { updateViaCache: 'none' }).catch((err) => {
-            console.log('SW registration error: ', err);
+            console.warn('[PWA] SW fallback error: ', err);
           });
         });
-      } catch {
-        navigator.serviceWorker.register('./sw.js', { updateViaCache: 'none' }).catch(() => {});
-      }
-      keepPortraitOrientation();
-    });
+    } catch {
+      navigator.serviceWorker.register('./sw.js', { updateViaCache: 'none' }).catch(() => {});
+    }
+    keepPortraitOrientation();
+  };
+
+  if (document.readyState === 'complete') {
+    registerSW();
   } else {
-    // In dev mode, ensure old service workers are cleaned up so preview loads fresh
-    navigator.serviceWorker.getRegistrations().then((registrations) => {
-      for (const registration of registrations) {
-        registration.unregister();
-      }
-    });
+    window.addEventListener('load', registerSW);
   }
 }
 

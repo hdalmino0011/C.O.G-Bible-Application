@@ -213,3 +213,48 @@ export async function getStorageEstimate(): Promise<{ usageFormatted: string; qu
     percent: 1
   };
 }
+
+/**
+ * Request persistent storage from browser so data is never evicted
+ */
+export async function requestPersistentStorage(): Promise<boolean> {
+  if (typeof navigator !== 'undefined' && navigator.storage && navigator.storage.persist) {
+    try {
+      const isPersisted = await navigator.storage.persist();
+      return isPersisted;
+    } catch {
+      return false;
+    }
+  }
+  return false;
+}
+
+/**
+ * Save book JSON into CacheStorage as well as IndexedDB
+ */
+export async function saveBookToCacheStorage(bookName: string, data: BookChapters): Promise<boolean> {
+  if (typeof caches === 'undefined') return false;
+  try {
+    const jsonStr = JSON.stringify(data);
+    const headers = { 'Content-Type': 'application/json; charset=utf-8' };
+    const cacheNames = await caches.keys();
+    const targetCache = cacheNames.find(c => c.startsWith('cog-bible-offline')) || 'cog-bible-offline-v7.0.0';
+    const cache = await caches.open(targetCache);
+
+    const urls = [
+      `./data/${bookName}.json`,
+      `data/${bookName}.json`,
+      `/data/${bookName}.json`,
+      `./data/${encodeURIComponent(bookName)}.json`,
+      `data/${encodeURIComponent(bookName)}.json`
+    ];
+
+    await Promise.all(
+      urls.map(u => cache.put(u, new Response(jsonStr, { headers })))
+    );
+    return true;
+  } catch (err) {
+    console.warn('[CacheStorage] Error saving book:', bookName, err);
+    return false;
+  }
+}

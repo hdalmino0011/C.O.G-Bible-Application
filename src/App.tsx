@@ -52,7 +52,9 @@ import {
   getBookFromIndexedDB,
   saveBookToIndexedDB,
   getAllStoredBookNamesFromIndexedDB,
-  getOfflineStorageSummary
+  getOfflineStorageSummary,
+  requestPersistentStorage,
+  saveBookToCacheStorage
 } from './utils/offlineDb';
 
 import { BIBLE_BOOKS, normalizeBookName } from './data/books';
@@ -171,6 +173,7 @@ export default function App() {
         if (content && typeof content === 'object' && Object.keys(content).length > 0) {
           setBibleData(prev => ({ ...prev, [bookName]: content }));
           saveBookToIndexedDB(bookName, content).catch(() => {});
+          saveBookToCacheStorage(bookName, content).catch(() => {});
           return content;
         }
       } catch (modErr) {
@@ -203,8 +206,9 @@ export default function App() {
         let bookContent = JSON.parse(trimmed) as BookChapters;
         if (bookContent && typeof bookContent === 'object' && Object.keys(bookContent).length > 0) {
           setBibleData(prev => ({ ...prev, [bookName]: bookContent }));
-          // Persist in phone IndexedDB so it's permanently stored on device
+          // Persist in phone IndexedDB & CacheStorage so it's permanently stored on device
           saveBookToIndexedDB(bookName, bookContent).catch(() => {});
+          saveBookToCacheStorage(bookName, bookContent).catch(() => {});
           return bookContent;
         }
       } catch {
@@ -276,6 +280,16 @@ export default function App() {
     setIsDownloadingPackage(true);
     let downloadedCount = 0;
 
+    // Request persistent storage from device OS
+    await requestPersistentStorage();
+
+    // Trigger Service Worker to precache all assets
+    if (typeof navigator !== 'undefined' && navigator.serviceWorker && navigator.serviceWorker.controller) {
+      navigator.serviceWorker.controller.postMessage({ type: 'CACHE_ALL_SCRIPTURES' });
+    }
+
+    const downloadedBibleData: BibleData = {};
+
     for (let i = 0; i < BIBLE_BOOKS.length; i++) {
       const book = BIBLE_BOOKS[i];
       setDownloadProgress({
@@ -285,7 +299,12 @@ export default function App() {
       });
 
       try {
-        await loadSingleBook(book.name);
+        const content = await loadSingleBook(book.name);
+        if (content) {
+          downloadedBibleData[book.name] = content;
+          await saveBookToIndexedDB(book.name, content);
+          await saveBookToCacheStorage(book.name, content);
+        }
       } catch (err) {
         console.warn(`Error loading ${book.name}:`, err);
       }
@@ -300,9 +319,13 @@ export default function App() {
       await new Promise(r => setTimeout(r, 20));
     }
 
+    setBibleData(prev => ({ ...prev, ...downloadedBibleData }));
+    localStorage.setItem('cog_offline_package_installed', 'true');
+    localStorage.setItem('cog_offline_installed_date', new Date().toISOString());
+
     setIsDownloadingPackage(false);
     setIsFullyDownloaded(true);
-    showToast('66 Books installed! App is 100% offline ready.');
+    showToast('66 Books saved to device memory! App works 100% offline.');
   }, [loadSingleBook, showToast]);
 
   // 2. Apply theme & font classes to document body
