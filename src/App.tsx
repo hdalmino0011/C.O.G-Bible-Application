@@ -294,7 +294,11 @@ export default function App() {
     setFailedDownloadBooks([]);
     setIsFullyDownloaded(false);
     setDownloadProgress({ current: 0, total: BIBLE_BOOKS.length, currentBook: '' });
-    localStorage.removeItem('cog_offline_package_installed');
+    try {
+      localStorage.removeItem('cog_offline_package_installed');
+    } catch {
+      // Continue if browser storage is restricted.
+    }
 
     const downloadedBibleData: BibleData = {};
 
@@ -353,12 +357,20 @@ export default function App() {
       setFailedDownloadBooks(summary.missingBooks);
 
       if (summary.missingCount === 0) {
-        localStorage.setItem('cog_offline_package_installed', 'true');
-        localStorage.setItem('cog_offline_installed_date', new Date().toISOString());
+        try {
+          localStorage.setItem('cog_offline_package_installed', 'true');
+          localStorage.setItem('cog_offline_installed_date', new Date().toISOString());
+        } catch {
+          // The verified IndexedDB/CacheStorage package is the source of truth.
+        }
         setIsFullyDownloaded(true);
         showToast('All 66 books are saved for offline use.');
       } else {
-        localStorage.removeItem('cog_offline_package_installed');
+        try {
+          localStorage.removeItem('cog_offline_package_installed');
+        } catch {
+          // Ignore restricted local storage.
+        }
         setDownloadError(summary.missingCount + ' book' + (summary.missingCount === 1 ? ' is' : 's are') + ' still missing. Please retry.');
         showToast('Offline package incomplete: ' + summary.missingCount + ' book' + (summary.missingCount === 1 ? '' : 's') + ' need' + (summary.missingCount === 1 ? 's' : '') + ' another try.');
       }
